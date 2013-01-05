@@ -5,7 +5,7 @@ import datetime
 
 from pyhn.hnapi import HackerNewsAPI
 
-cache_path = os.path.join(os.environ.get('HOME', './'), '.hn.cache')
+cache_path = os.path.join(os.environ.get('HOME', './'), '.pyhn.cache')
 
 class cacheManager(object):
 	def __init__(self, path=cache_path):
