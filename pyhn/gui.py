@@ -69,14 +69,14 @@ class HNGui(object):
             ]
 
         self.header = urwid.Columns(self.header_content, dividechars=1)
-        self.footer = urwid.AttrMap(urwid.Text('Welcome in hn_cli by socketubs (http://socketubs.net)'), 'footer')
+        self.footer = urwid.AttrMap(urwid.Text('Welcome in pyhn by socketubs (https://github.com/socketubs/pyhn)'), 'footer')
 
         self.view = urwid.Frame(urwid.AttrWrap(self.listbox, 'body'), header=self.header, footer=self.footer)
         self.loop = urwid.MainLoop(self.view, self.palette, screen=self.ui, unhandled_input=self.keystroke)
         self.already_build = True
 
     def set_help(self):
-        msg = "T: Top -- B: Best -- N: Newest -- R: Refresh -- Enter: Open link -- ?,H: Help -- Q: Quit"
+        msg = "J: Go next -- K: Go prev -- T: Top -- B: Best -- N: Newest -- R: Refresh -- Enter: Open link -- ?, H: Help -- Q: Quit"
         self.view.set_footer(urwid.AttrWrap(urwid.Text(msg, align="center"), 'help'))
 
     def set_footer(self, msg):
@@ -128,6 +128,10 @@ class HNGui(object):
 
         elif input in ('h', 'H', '?'):
             self.set_help()
+        elif input is 'j':
+            self.listbox.set_focus(self.listbox.focus_position - 1)
+        elif input is 'k':
+            self.listbox.set_focus(self.listbox.focus_position + 1)
 
     def update_stories(self, stories):
         items = []
