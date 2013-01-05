@@ -11,6 +11,7 @@ class ItemWidget(urwid.WidgetWrap):
         self.url = story.URL
         self.submitter = story.submitter
         self.comment_count = story.commentCount
+        self.comments_url = story.commentsURL
         self.score = story.score
         self.publishedTime = story.publishedTime
         self.item = [
@@ -76,7 +77,7 @@ class HNGui(object):
         self.already_build = True
 
     def set_help(self):
-        msg = "J: Go next -- K: Go prev -- T: Top -- B: Best -- N: Newest -- R: Refresh -- Enter: Open link -- ?, H: Help -- Q: Quit"
+        msg = "J: Go next -- K: Go prev -- T: Top -- B: Best -- N: Newest -- R: Refresh -- Enter: Open link -- C: Open comments link -- ?, H: Help -- Q: Quit"
         self.view.set_footer(urwid.AttrWrap(urwid.Text(msg, align="center"), 'help'))
 
     def set_footer(self, msg):
@@ -125,6 +126,9 @@ class HNGui(object):
             self.cache_manager.refresh(self.which)
             stories = self.cache_manager.get_stories(self.which)
             self.update_stories(stories)
+
+        elif input in ('c', 'C'):
+            webbrowser.open(self.listbox.get_focus()[0].comments_url, autoraise=False)
 
         elif input in ('h', 'H', '?'):
             self.set_help()
