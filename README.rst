@@ -13,3 +13,7 @@ Installation
 Using pip: ::
 
 	pip install pyhn
+
+Run it: ::
+
+	pyhn
