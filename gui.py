@@ -43,7 +43,8 @@ class HNGui(object):
             ('focus','black', 'light green', 'underline'),
             ('footer','black', 'light gray'),
             ('header','dark gray,bold', 'white'),
-            ('title','dark red,bold', 'white', '')
+            ('title','dark red,bold', 'light gray', ''),
+            ('help','black,bold', 'light gray'),
         ]
 
     def main(self):
@@ -75,22 +76,26 @@ class HNGui(object):
         self.loop = urwid.MainLoop(self.view, self.palette, screen=self.ui, unhandled_input=self.keystroke)
         self.already_build = True
 
+    def set_help(self):
+        msg = "T: Top -- B: Best -- N: Newest -- R: Refresh -- Enter: Open link -- ?,H: Help -- Q: Quit"
+        self.view.set_footer(urwid.AttrWrap(urwid.Text(msg, align="center"), 'help'))
+
     def set_footer(self, msg):
         self.view.set_footer(urwid.AttrWrap(urwid.Text(msg), 'footer'))
 
     def set_header(self, msg):
-        self.header_content[1] = urwid.AttrWrap(urwid.Text(msg), 'title')
+        self.header_content[1] = urwid.AttrWrap(urwid.Text(msg, align="center"), 'title')
         self.view.set_header(urwid.Columns(self.header_content, dividechars=1))
 
     def keystroke(self, input):
         if input in ('q', 'Q'):
             raise urwid.ExitMainLoop()
 
-        if input is 'enter':
+        elif input is 'enter':
             focus = self.listbox.get_focus()[0].title
             webbrowser.open(self.listbox.get_focus()[0].url, autoraise=False)
 
-        if input in ('n', 'N'):
+        elif input in ('n', 'N'):
             self.set_footer('Retrieving newest stories...')
             if self.cache_manager.is_outdated('newest'):
                 self.cache_manager.refresh('newest')
@@ -99,7 +104,7 @@ class HNGui(object):
             self.set_header('NEWEST STORIES')
             self.which = "newest"
 
-        if input in ('t', 'T'):
+        elif input in ('t', 'T'):
             self.set_footer('Retrieving top stories...')
             if self.cache_manager.is_outdated('top'):
                 self.cache_manager.refresh('top')
@@ -108,7 +113,7 @@ class HNGui(object):
             self.set_header('TOP STORIES')
             self.which = "top"
 
-        if input in ('b', 'B'):
+        elif input in ('b', 'B'):
             self.set_footer('Retrieving best stories...')
             if self.cache_manager.is_outdated('best'):
                 self.cache_manager.refresh('best')
@@ -117,10 +122,13 @@ class HNGui(object):
             self.set_header('BEST STORIES')
             self.which = "best"
 
-        if input is 'r':
+        elif input in ('r', 'R'):
             self.cache_manager.refresh(self.which)
             stories = self.cache_manager.get_stories(self.which)
             self.update_stories(stories)
+
+        elif input in ('h', 'H', '?'):
+            self.set_help()
 
     def update_stories(self, stories):
         items = []
