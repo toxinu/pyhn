@@ -1,10 +1,9 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
 import pickle
 import datetime
 
-from hnapi import HackerNewsAPI
+from pyhn.hnapi import HackerNewsAPI
 
 cache_path = os.path.join(os.environ.get('HOME', './'), '.hn.cache')
 
@@ -14,7 +13,7 @@ class cacheManager(object):
 		self.api = HackerNewsAPI()
 
 		if not os.path.exists(self.path):
-			self.refresh_cache()
+			self.refresh()
 
 	def is_outdated(self, which="top"):
 		if not os.path.exists(self.path):
