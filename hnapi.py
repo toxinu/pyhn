@@ -38,7 +38,6 @@ from BeautifulSoup import BeautifulSoup
 import urllib2
 import re
 
-
 class HNException(Exception):
     """
     HNException is exactly the same as a plain Python Exception.
@@ -62,7 +61,7 @@ class HackerNewsAPI:
             f = urllib2.urlopen(url)
             source = f.read()
             f.close()
-            return source
+            return source.decode('utf-8')
         except urllib2.URLError:
             raise HNException("Error getting source from " + url + ". Your internet connection may have something funny going on, or you could be behind a proxy.")
 
