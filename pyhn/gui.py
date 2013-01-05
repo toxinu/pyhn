@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
+import sys
 import urwid
-import webbrowser
+import subprocess
 
 class ItemWidget(urwid.WidgetWrap):
 
@@ -90,11 +91,8 @@ class HNGui(object):
     def keystroke(self, input):
         if input in ('q', 'Q'):
             raise urwid.ExitMainLoop()
-
         elif input is 'enter':
-            focus = self.listbox.get_focus()[0].title
-            webbrowser.open(self.listbox.get_focus()[0].url, autoraise=False)
-
+            self.open_webbrowser(self.listbox.get_focus()[0].url)
         elif input in ('n', 'N'):
             self.set_footer('Retrieving newest stories...')
             if self.cache_manager.is_outdated('newest'):
@@ -103,7 +101,6 @@ class HNGui(object):
             self.update_stories(stories)
             self.set_header('NEWEST STORIES')
             self.which = "newest"
-
         elif input in ('t', 'T'):
             self.set_footer('Retrieving top stories...')
             if self.cache_manager.is_outdated('top'):
@@ -112,7 +109,6 @@ class HNGui(object):
             self.update_stories(stories)
             self.set_header('TOP STORIES')
             self.which = "top"
-
         elif input in ('b', 'B'):
             self.set_footer('Retrieving best stories...')
             if self.cache_manager.is_outdated('best'):
@@ -121,15 +117,12 @@ class HNGui(object):
             self.update_stories(stories)
             self.set_header('BEST STORIES')
             self.which = "best"
-
         elif input in ('r', 'R'):
             self.cache_manager.refresh(self.which)
             stories = self.cache_manager.get_stories(self.which)
             self.update_stories(stories)
-
         elif input in ('c', 'C'):
-            webbrowser.open(self.listbox.get_focus()[0].comments_url, autoraise=False)
-
+            self.open_webbrowser(self.listbox.get_focus()[0].comments_url)
         elif input in ('h', 'H', '?'):
             self.set_help()
         elif input is 'k':
@@ -150,6 +143,10 @@ class HNGui(object):
         else:
             self.walker = urwid.SimpleListWalker(items)
             self.listbox = urwid.ListBox(self.walker)
+
+    def open_webbrowser(self, url):
+        python_bin = sys.executable
+        browser_output = subprocess.Popen([python_bin, '-m', 'webbrowser', '-t', url],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 
     def update(self):
         focus = self.listbox.get_focus()[0]
