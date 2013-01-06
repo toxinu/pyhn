@@ -10,9 +10,10 @@ class cacheManager(object):
 	def __init__(self, cache_path=None):
 		self.cache_path = cache_path
 		if cache_path is None:
-			config = Config()
-			self.cache_path = config.parser.get('settings', 'cache')
+			self.config = Config()
+			self.cache_path = self.config.parser.get('settings', 'cache')
 
+		self.cache_age = int(self.config.parser.get('settings', 'cache_age'))
 		self.api = HackerNewsAPI()
 
 		if not os.path.exists(self.cache_path):
@@ -27,7 +28,7 @@ class cacheManager(object):
 			return True
 
 		cache_age = datetime.datetime.today() - cache[which]['date']
-		if cache_age.seconds > 5*60:
+		if cache_age.seconds > self.cache_age*60:
 			return True
 		else:
 			return False
