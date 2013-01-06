@@ -131,6 +131,9 @@ class HNGui(object):
         elif input is 'j':
             if self.listbox.focus_position + 1 in self.walker.positions():
                 self.listbox.set_focus(self.walker.next_position(self.listbox.focus_position))
+        elif input is 'ctrl f':
+            if self.listbox.focus_position + 14 in self.walker.positions():
+                self.listbox.set_focus(self.walker.next_position(self.listbox.focus_position))
 
     def update_stories(self, stories):
         items = []
