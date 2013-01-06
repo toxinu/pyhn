@@ -30,4 +30,4 @@ Usage
 * **r**: Refresh view
 * **Enter**: Open selected story in new web browser tab
 * **c**: Open selected story comments page in new web browser tab
-* **q**,**Escape**: Quit pyhn
+* **q**, **Escape**: Quit pyhn
