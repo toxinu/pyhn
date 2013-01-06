@@ -45,6 +45,7 @@ class HNGui(object):
         self.which = "top"
 
         self.config = Config()
+        self.build_help()
         self.palette = self.config.get_palette()
 
     def main(self):
@@ -52,6 +53,18 @@ class HNGui(object):
         self.ui.register_palette(self.palette)
         self.build_interface()
         self.ui.run_wrapper(self.run)
+
+    def build_help(self):
+        self.help = " %s: Go next - %s: Go prev - %s: Page up - %s: Page down - \
+t: Top - b: Best - n: Newest - %s: Refresh - Enter: Open link - \
+%s: Open comments link - %s: Reload configuration - h,?: Help - Q,Escape: Quit " % (
+                self.config.parser.get('keybindings', 'down'),
+                self.config.parser.get('keybindings', 'up'),
+                self.config.parser.get('keybindings', 'page_up'),
+                self.config.parser.get('keybindings', 'page_down'),
+                self.config.parser.get('keybindings', 'refresh'),
+                self.config.parser.get('keybindings', 'open_comments'),
+                self.config.parser.get('keybindings', 'reload_config'))
 
     def build_interface(self):
         if self.cache_manager.is_outdated():
@@ -77,8 +90,7 @@ class HNGui(object):
         self.already_build = True
 
     def set_help(self):
-        msg = "J: Go next -- K: Go prev -- T: Top -- B: Best -- N: Newest -- R: Refresh -- Enter: Open link -- C: Open comments link -- ?, H: Help -- Q: Quit"
-        self.view.set_footer(urwid.AttrWrap(urwid.Text(msg, align="center"), 'help'))
+        self.view.set_footer(urwid.AttrWrap(urwid.Text(self.help, align="center"), 'help'))
 
     def set_footer(self, msg):
         self.view.set_footer(urwid.AttrWrap(urwid.Text(msg), 'footer'))
@@ -160,6 +172,7 @@ class HNGui(object):
     def reload_config(self):
         self.set_footer('Reloading configuration')
         self.config = Config()
+        self.build_help()
         self.palette = self.config.get_palette()
         self.build_interface()
         self.loop.draw_screen()
