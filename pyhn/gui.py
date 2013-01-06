@@ -141,7 +141,7 @@ class HNGui(object):
                 self.listbox.set_focus(self.listbox.focus_position - 15)
             else:
                 self.listbox.set_focus(0)
-        elif input is 'g':
+        elif input is 'gg':
             self.listbox.set_focus(0)
         elif input is 'G':
             self.listbox.set_focus(self.detect_end())
