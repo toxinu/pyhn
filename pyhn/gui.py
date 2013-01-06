@@ -132,18 +132,18 @@ class HNGui(object):
             if self.listbox.focus_position + 1 in self.walker.positions():
                 self.listbox.set_focus(self.walker.next_position(self.listbox.focus_position))
         elif input is 'F':
-            self.listbox.set_focus(self.listbox.focus_position + self.detect_end(self.listbox.focus_position))
+            if self.listbox.focus_position + 15 in self.walker.positions():
+                self.listbox.set_focus(self.listbox.focus_position + 15)
+            else:
+                self.listbox.set_focus(self.detect_end)
         elif input is 'D':
             if self.listbox.focus_position - 15 in self.walker.positions():
                 self.listbox.set_focus(self.listbox.focus_position - 15)
             else:
                 self.listbox.set_focus(0)
 
-    def detect_end(self, position):
-        for i in range(1, 16):
-            if self.listbox.focus_position + 16 - i in self.walker.positions():
-                break
-        return 0 if i == 15 else 16-i
+    def detect_end(self):
+        return 60 if 60 in self.walker.positions() else 30
 
     def update_stories(self, stories):
         items = []
