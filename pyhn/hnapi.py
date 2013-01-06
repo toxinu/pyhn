@@ -33,10 +33,18 @@ or implied, of Scott Jackson.
 
 
 """
-
-from BeautifulSoup import BeautifulSoup
-import urllib2
+import isit
 import re
+
+from bs4 import BeautifulSoup
+
+if isit.py3:
+    import urllib.request
+    import urllib.parse
+    from urllib.error import URLError
+else:
+    import urllib2
+    from urllib2 import URLError
 
 class HNException(Exception):
     """
@@ -58,11 +66,15 @@ class HackerNewsAPI:
         Returns the HTML source code for a URL.
         """
         try:
-            f = urllib2.urlopen(url)
+            if isit.py3:
+                f = urllib.request.urlopen(url)
+            else:
+                f = urllib2.urlopen(url)
+
             source = f.read()
             f.close()
             return source.decode('utf-8')
-        except urllib2.URLError:
+        except URLError:
             raise HNException("Error getting source from " + url + ". Your internet connection may have something funny going on, or you could be behind a proxy.")
 
     def getStoryNumber(self, source):

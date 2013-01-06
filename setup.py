@@ -36,7 +36,7 @@ setup(
 	keywords="python hackernews hn",
 	packages = ['pyhn'],
 	scripts=['scripts/pyhn'],
-	install_requires=['urwid','beautifulsoup'],
+	install_requires=['urwid', 'beautifulsoup4', 'isit'],
 	classifiers=(
 		'Intended Audience :: Developers',
 		'Natural Language :: English',
