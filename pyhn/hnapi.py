@@ -310,16 +310,16 @@ class HackerNewsStory:
         """
         Prints details of the story.
         """
-        print str(self.number) + ": " + self.title
-        print "URL: " + self.URL
-        print "domain: " + self.domain
-        print "score: " + str(self.score) + " points"
-        print "submitted by: " + self.submitter
-        print "sinc %s" + self.publishedTime
-        print "# of comments: " + str(self.commentCount)
-        print "'discuss' URL: " + self.commentsURL
-        print "HN ID: " + str(self.id)
-        print " "
+        print(str(self.number) + ": " + self.title)
+        print("URL: " + self.URL)
+        print("domain: " + self.domain)
+        print("score: " + str(self.score) + " points")
+        print("submitted by: " + self.submitter)
+        print("sinc %s" + self.publishedTime)
+        print("of comments: " + str(self.commentCount))
+        print("'discuss' URL: " + self.commentsURL)
+        print("HN ID: " + str(self.id))
+        print(" ")
 
 
 class HackerNewsUser:
