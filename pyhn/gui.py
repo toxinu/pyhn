@@ -137,7 +137,7 @@ class HNGui(object):
         elif input is 'B':
             if self.listbox.focus_position - 15 in self.walker.positions():
                 self.listbox.set_focus(self.listbox.focus_position - 15)
-            else
+            else:
                 self.listbox.set_focus(0)
 
     def update_stories(self, stories):
