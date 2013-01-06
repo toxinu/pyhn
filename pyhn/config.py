@@ -32,9 +32,9 @@ class Config(object):
 			self.parser.add_section('keybindings')
 
 		if not self.parser.has_option('keybindings', 'page_up'):
-			self.parser.set('keybindings', 'page_up', 'ctrl d')
+			self.parser.set('keybindings', 'page_up', 'ctrl u')
 		if not self.parser.has_option('keybindings', 'page_down'):
-			self.parser.set('keybindings', 'page_down', 'ctrl u')
+			self.parser.set('keybindings', 'page_down', 'ctrl d')
 		if not self.parser.has_option('keybindings', 'up'):
 			self.parser.set('keybindings', 'up', 'j')
 		if not self.parser.has_option('keybindings', 'down'):
