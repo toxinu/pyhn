@@ -143,7 +143,7 @@ class HNGui(object):
                 self.listbox.set_focus(0)
 
     def detect_end(self):
-        return 60 if 60 in self.walker.positions() else 30
+        return 59 if 59 in self.walker.positions() else 29
 
     def update_stories(self, stories):
         items = []
