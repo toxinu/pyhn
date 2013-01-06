@@ -23,7 +23,7 @@ class cacheManager(object):
 		if not os.path.exists(self.cache_path):
 			return True
 
-		cache = pickle.load(open(self.cache_path))
+		cache = pickle.load(open(self.cache_path, 'rb'))
 		if not cache.get(which, False):
 			return True
 
@@ -45,15 +45,15 @@ class cacheManager(object):
 
 		cache = {}
 		if os.path.exists(self.cache_path):
-			cache = pickle.load(open(self.cache_path))
+			cache = pickle.load(open(self.cache_path, 'rb'))
 
 		cache[which] = {'stories':stories, 'date':datetime.datetime.today()}
-		pickle.dump(cache, open(self.cache_path, 'w'))
+		pickle.dump(cache, open(self.cache_path, 'wb'))
 
 	def get_stories(self, which="top"):
 		cache = []
 		if os.path.exists(self.cache_path):
-			cache = pickle.load(open(self.cache_path))
+			cache = pickle.load(open(self.cache_path, 'rb'))
 	
 		if not cache.get(which, False):
 			return []
