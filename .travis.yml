@@ -8,3 +8,5 @@ python:
   - pypy
 install:
   - pip install . --use-mirrors
+script:
+  - true
