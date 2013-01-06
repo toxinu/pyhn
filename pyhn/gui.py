@@ -143,6 +143,8 @@ class HNGui(object):
                 self.listbox.set_focus(0)
         elif input is 'g':
             self.listbox.set_focus(0)
+        elif input is 'G':
+            self.listbox.set_focus(15)
 
     def detect_end(self):
         return 59 if 59 in self.walker.positions() else 29
