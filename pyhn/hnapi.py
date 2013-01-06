@@ -46,6 +46,7 @@ else:
     import urllib2
     from urllib2 import URLError
 
+
 class HNException(Exception):
     """
     HNException is exactly the same as a plain Python Exception.
@@ -54,6 +55,7 @@ class HNException(Exception):
     errors that come from HN as opposed to from your application.
     """
     pass
+
 
 class HackerNewsAPI:
     """
@@ -93,19 +95,19 @@ class HackerNewsAPI:
         URLEnd = source.find('">', URLStart)
         url = source[URLStart:URLEnd]
         # Check for "Ask HN" links.
-        if url[0:4] == "item": # "Ask HN" links start with "item".
+        if url[0:4] == "item":  # "Ask HN" links start with "item".
             url = "http://news.ycombinator.com/" + url
 
         # Change "&amp;" to "&"
         url = url.replace("&amp;", "&")
 
         # Remove 'rel="nofollow' from the end of links, since they were causing some bugs.
-        if url[len(url)-13:] == "rel=\"nofollow":
-            url = url[:len(url)-13]
+        if url[len(url) - 13:] == "rel=\"nofollow":
+            url = url[:len(url) - 13]
 
         # Weird hack for URLs that end in '" '. Consider removing later if it causes any problems.
-        if url[len(url)-2:] == "\" ":
-            url = url[:len(url)-2]
+        if url[len(url) - 2:] == "\" ":
+            url = url[:len(url) - 2]
         return url
 
     def getStoryDomain(self, source):
@@ -118,13 +120,13 @@ class HackerNewsAPI:
         # Check for "Ask HN" links.
         if domain[0] == '=':
             return "http://news.ycombinator.com"
-        return "http://" + domain[1:len(domain)-2]
+        return "http://" + domain[1:len(domain) - 2]
 
     def getStoryTitle(self, source):
         """
         Gets the title of a story.
         """
-        titleStart = source.find('>', source.find('>')+1) + 1
+        titleStart = source.find('>', source.find('>') + 1) + 1
         titleEnd = source.find('</a>')
         title = source[titleStart:titleEnd]
         title = title.lstrip()  # Strip trailing whitespace characters.
@@ -134,7 +136,7 @@ class HackerNewsAPI:
         """
         Gets the score of a story.
         """
-        scoreStart = source.find('>', source.find('>')+1) + 1
+        scoreStart = source.find('>', source.find('>') + 1) + 1
         scoreEnd = source.find(' ', scoreStart)
         score = source[scoreStart:scoreEnd]
         if not score.isdigit():
@@ -204,14 +206,14 @@ class HackerNewsAPI:
 
         soup = BeautifulSoup(source)
         # Gives URLs, Domains and titles.
-        story_details = soup.findAll("td", {"class" : "title"})
+        story_details = soup.findAll("td", {"class": "title"})
         # Gives score, submitter, comment count and comment URL.
-        story_other_details = soup.findAll("td", {"class" : "subtext"})
+        story_other_details = soup.findAll("td", {"class": "subtext"})
 
         # Get story numbers.
         storyNumbers = []
-        for i in range(0,len(story_details) - 1, 2):
-            story = str(story_details[i]) # otherwise, story_details[i] is a BeautifulSoup-defined object.
+        for i in range(0, len(story_details) - 1, 2):
+            story = str(story_details[i])  # otherwise, story_details[i] is a BeautifulSoup-defined object.
             storyNumber = self.getStoryNumber(story)
             storyNumbers.append(storyNumber)
 
@@ -225,7 +227,7 @@ class HackerNewsAPI:
         storyPublishedTime = []
         storyIDs = []
 
-        for i in range(1, len(story_details), 2): # Every second cell contains a story.
+        for i in range(1, len(story_details), 2):  # Every second cell contains a story.
             story = str(story_details[i])
             storyURLs.append(self.getStoryURL(story))
             storyDomains.append(self.getStoryDomain(story))
@@ -239,7 +241,6 @@ class HackerNewsAPI:
             storyCommentURLs.append(self.getCommentsURL(story))
             storyPublishedTime.append(self.getPublishedTime(story))
             storyIDs.append(self.getHNID(story))
-
 
         # Associate the values with our newsStories.
         for i in range(0, self.numberOfStoriesOnFrontPage):
@@ -303,6 +304,7 @@ class HackerNewsAPI:
         stories  = self.getStories(source)
         return stories
 
+
 class HackerNewsStory:
     """
     A class representing a story on Hacker News.
@@ -351,7 +353,6 @@ class HackerNewsUser:
         self.userPageURL = "http://news.ycombinator.com/user?id=" + self.name
         self.threadsPageURL = "http://news.ycombinator.com/threads?id=" + self.name
         self.refreshKarma()
-
 
     def refreshKarma(self):
         """

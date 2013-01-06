@@ -6,6 +6,7 @@ import subprocess
 
 from pyhn.config import Config
 
+
 class ItemWidget(urwid.WidgetWrap):
 
     def __init__(self, story):
@@ -23,18 +24,19 @@ class ItemWidget(urwid.WidgetWrap):
                 urwid.Text("%s:" % self.number, align="right"), 'body', 'focus'))),
             urwid.AttrWrap(urwid.Text('%s' % self.title), 'body', 'focus'),
             ('fixed', 5, urwid.Padding(urwid.AttrWrap(
-                urwid.Text(str(self.score), align="right"), 'body','focus'))),
+                urwid.Text(str(self.score), align="right"), 'body', 'focus'))),
             ('fixed', 8, urwid.Padding(urwid.AttrWrap(
-                urwid.Text(str(self.comment_count), align="right"), 'body','focus'))),
+                urwid.Text(str(self.comment_count), align="right"), 'body', 'focus'))),
         ]
         w = urwid.Columns(self.item, focus_column=1, dividechars=1)
         self.__super.__init__(w)
 
-    def selectable (self):
+    def selectable(self):
         return True
 
     def keypress(self, size, key):
         return key
+
 
 class HNGui(object):
     def __init__(self, cache_manager):
@@ -54,7 +56,7 @@ class HNGui(object):
     def build_interface(self):
         if self.cache_manager.is_outdated():
             self.cache_manager.refresh()
-        
+
         self.stories = self.cache_manager.get_stories()
         self.update_stories(self.stories)
         self.header_content = [
