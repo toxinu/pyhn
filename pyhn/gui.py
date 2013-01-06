@@ -130,6 +130,10 @@ class HNGui(object):
                 self.listbox.set_focus(self.walker.next_position(self.listbox.focus_position))
         elif input in self.config.parser.get('keybindings', 'reload_config').split(','):
             self.reload_config()
+        elif input in self.config.parser.get('keybindings', 'page_up').split(','):
+            self.listbox._keypress_page_up(self.ui.get_cols_rows())
+        elif input in self.config.parser.get('keybindings', 'page_down').split(','):
+            self.listbox._keypress_page_down(self.ui.get_cols_rows())
 
     def update_stories(self, stories):
         items = []
