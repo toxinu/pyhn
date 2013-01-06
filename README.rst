@@ -51,6 +51,7 @@ This is an example file: ::
 
 	[settings]
 	cache = /home/socketubs/.pyhn/cache
+	cache_age = 5
 
 	[colors]
 	body = default||standout
@@ -59,6 +60,11 @@ This is an example file: ::
 	header = dark gray,bold|white|
 	title = dark red,bold|light gray
 	help = black,bold|light gray
+
+Settings
+~~~~~~~~
+
+``cache_age`` is a minute indicator which say to ``CacheManager`` when cache is outdated.
 
 Key bindings
 ~~~~~~~~~~~~
