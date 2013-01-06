@@ -143,7 +143,7 @@ class HNGui(object):
         for i in range(1, 16):
             if self.listbox.focus_position + 16 - i in self.walker.positions():
                 break
-        return 16-i
+        return i == 15 ? 0 : 16-i
 
     def update_stories(self, stories):
         items = []
