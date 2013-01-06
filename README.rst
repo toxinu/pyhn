@@ -31,3 +31,67 @@ Usage
 * **Enter**: Open selected story in new web browser tab
 * **c**: Open selected story comments page in new web browser tab
 * **q**, **Escape**: Quit pyhn
+
+Configuration
+-------------
+
+By default, configuration file is in your ``$HOME/.pyhn/confi``.
+You can set key bindings, colors and more.
+
+This is an example file: ::
+
+	[keybindings]
+	page_up = ctrl d
+	page_down = ctrl u
+	up = j
+	down = k
+	refresh = r,R
+	open_comments = a
+	reload_config = ctrl r,ctrl R
+
+	[settings]
+	cache = /home/socketubs/.pyhn/cache
+
+	[colors]
+	body = default||standout
+	focus = black|light green|underline
+	footer = black|light gray
+	header = dark gray,bold|white|
+	title = dark red,bold|light gray
+	help = black,bold|light gray
+
+Key bindings
+~~~~~~~~~~~~
+
+You can set different key bindings for same action with a comma separator.
+Take a look at ``urwid`` `input`_ manual.
+
+Colors
+~~~~~~
+
+Colors options are designed like that: ``foreground|background|monochrome``.
+
+**foreground**
+
+* *colors*:  ‘default’ (use the terminal’s default foreground), ‘black’, ‘dark red’, ‘dark green’, ‘brown’, ‘dark blue’, ‘dark magenta’, ‘dark cyan’, ‘light gray’, ‘dark gray’, ‘light red’, ‘light green’, ‘yellow’, ‘light blue’, ‘light magenta’, ‘light cyan’, ‘white’
+* *settings*: ‘bold’, ‘underline’, ‘blink’, ‘standout’
+
+**background**
+
+* *colors*: ‘default’ (use the terminal’s default background), ‘black’, ‘dark red’, ‘dark green’, ‘brown’, ‘dark blue’, ‘dark magenta’, ‘dark cyan’, ‘light gray’
+
+**monochrome**
+
+* *settings* : ‘bold’, ‘underline’, ‘blink’, ‘standout’
+
+For more informations you can take a loot at ``urwid`` `manual`_.
+
+License
+-------
+
+License is `AGPL3`_. See `LICENSE`_.
+
+.. _input: http://excess.org/urwid/docs/manual/userinput.html#keyboard-input
+.. _manual: http://excess.org/urwid/docs/reference/display_modules.html#urwid.BaseScreen.register_palette
+.. _AGPL3: http://www.gnu.org/licenses/agpl.html
+.. _LICENSE: https://raw.github.com/socketubs/pyhn/master/LICENSE
