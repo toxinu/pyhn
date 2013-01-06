@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
+import os
 import sys
 import urwid
 import subprocess
+
+from pyhn.config import Config
 
 class ItemWidget(urwid.WidgetWrap):
 
@@ -39,14 +42,8 @@ class HNGui(object):
         self.already_build = False
         self.which = "top"
 
-        self.palette = [
-            ('body','default', '', 'standout'),
-            ('focus','black', 'light green', 'underline'),
-            ('footer','black', 'light gray'),
-            ('header','dark gray,bold', 'white'),
-            ('title','dark red,bold', 'light gray', ''),
-            ('help','black,bold', 'light gray'),
-        ]
+        self.config = Config()
+        self.palette = self.config.get_palette()
 
     def main(self):
         self.ui = urwid.raw_display.Screen()
@@ -117,20 +114,22 @@ class HNGui(object):
             self.update_stories(stories)
             self.set_header('BEST STORIES')
             self.which = "best"
-        elif input in ('r', 'R'):
+        elif input in self.config.parser.get('keybindings', 'refresh').split(','):
             self.cache_manager.refresh(self.which)
             stories = self.cache_manager.get_stories(self.which)
             self.update_stories(stories)
-        elif input in ('c', 'C'):
+        elif input in self.config.parser.get('keybindings', 'open_comments').split(','):
             self.open_webbrowser(self.listbox.get_focus()[0].comments_url)
         elif input in ('h', 'H', '?'):
             self.set_help()
-        elif input is 'k':
+        elif input in self.config.parser.get('keybindings', 'down').split(','):
             if self.listbox.focus_position - 1 in self.walker.positions():
                 self.listbox.set_focus(self.walker.prev_position(self.listbox.focus_position))
-        elif input is 'j':
+        elif input in self.config.parser.get('keybindings', 'up').split(','):
             if self.listbox.focus_position + 1 in self.walker.positions():
                 self.listbox.set_focus(self.walker.next_position(self.listbox.focus_position))
+        elif input in self.config.parser.get('keybindings', 'reload_config').split(','):
+            self.reload_config()
 
     def update_stories(self, stories):
         items = []
@@ -151,6 +150,17 @@ class HNGui(object):
     def update(self):
         focus = self.listbox.get_focus()[0]
         self.set_footer('submitted %s by %s' % (focus.publishedTime, focus.submitter))
+
+    def reload_config(self):
+        self.set_footer('Reloading configuration')
+        self.config = Config()
+        self.palette = self.config.get_palette()
+        self.build_interface()
+        self.loop.draw_screen()
+        self.set_footer('Configuration file reloaded!')
+
+        if self.config.parser.get('settings', 'cache') != self.cache_manager.cache_path:
+            self.cache_manager.cache_path = self.config.parser.get('settings', 'cache')
 
     def run(self):
         urwid.connect_signal(self.walker, 'modified', self.update)
