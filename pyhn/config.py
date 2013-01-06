@@ -52,6 +52,8 @@ class Config(object):
 
 		if not self.parser.has_option('settings', 'cache'):
 			self.parser.set('settings', 'cache', os.path.join(os.environ.get('HOME', './'), '.pyhn', 'cache'))
+		if not self.parser.has_option('settings', 'cache_age'):
+			self.parser.set('settings', 'cache_age', "5")
 
 		# Colors
 		if not self.parser.has_section('colors'):
