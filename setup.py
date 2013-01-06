@@ -32,7 +32,7 @@ setup(
 	license=open("LICENSE").read(),
 	author="Geoffrey Lehée",
 	author_email="geoffrey@lehee.name",
-	url='https://github.com/alexzhan/pyhn/',
+	url='https://github.com/socketubs/pyhn/',
 	keywords="python hackernews hn",
 	packages = ['pyhn'],
 	scripts=['scripts/pyhn'],
