@@ -134,7 +134,7 @@ class HNGui(object):
         elif input is 'F':
             if self.listbox.focus_position + 15 in self.walker.positions():
                 self.listbox.set_focus(self.listbox.focus_position + 15)
-        elif input is 'B':
+        elif input is 'G':
             if self.listbox.focus_position - 15 in self.walker.positions():
                 self.listbox.set_focus(self.listbox.focus_position - 15)
             else:
