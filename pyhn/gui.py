@@ -5,7 +5,7 @@ import urwid
 import subprocess
 
 from pyhn.config import Config
-
+from pyhn.popup import Popup
 
 class ItemWidget(urwid.WidgetWrap):
 
@@ -46,39 +46,41 @@ class HNGui(object):
         self.which = "top"
 
         self.config = Config()
-        self.build_help()
         self.palette = self.config.get_palette()
 
     def main(self):
+        """ Main Gui function which create Ui object, build interface and run the loop """
         self.ui = urwid.raw_display.Screen()
         self.ui.register_palette(self.palette)
         self.build_interface()
         self.ui.run_wrapper(self.run)
 
     def build_help(self):
+        """ Fetch all key bindings and build help message """
         self.bindings = {}
+        self.help_msg = []
+        self.help_msg.append(urwid.AttrWrap(urwid.Text('\n Key bindings \n'), 'title'))
+        self.help_msg.append(urwid.AttrWrap(urwid.Text(''), 'help'))
         for binding in self.config.parser.items('keybindings'):
             self.bindings[binding[0]] = binding[1]
-        self.help = " %s: down - %s: up - %s: page up - %s: page down - %s: first story - \
-%s: last story - t: top - b: best - n: newest - %s: refresh - %s: open story link - %s: show story link - \
-%s: open comments link - %s: show comments link - %s: open submitter link - %s: show submitter link - \
-%s: reload configuration - h,?: help - q,escape: quit " % (
-                self.bindings['down'],
-                self.bindings['up'],
-                self.bindings['page_up'],
-                self.bindings['page_down'],
-                self.bindings['first_story'],
-                self.bindings['last_story'],
-                self.bindings['refresh'],
-                self.bindings['open_story_link'],
-                self.bindings['show_story_link'],
-                self.bindings['open_comments_link'],
-                self.bindings['show_comments_link'],
-                self.bindings['open_submitter_link'],
-                self.bindings['show_submitter_link'],
-                self.bindings['reload_config'])
+            line = urwid.AttrWrap(urwid.Text(' %s: %s ' % (
+                    binding[1],
+                    binding[0].replace('_', ' '))), 'help')
+            self.help_msg.append(line)
+        self.help_msg.append(urwid.AttrWrap(urwid.Text(''), 'help'))
+        self.help_msg.append(urwid.AttrWrap(urwid.Text(' Thanks for using Pyhn! '), 'title'))
+        self.help_msg.append(urwid.AttrWrap(urwid.Text(' Website: http://github.com/socketubs/pyhn '), 'help'))
+        self.help_msg.append(urwid.AttrWrap(urwid.Text(' Author : socketubs '), 'help'))
+        self.help_msg.append(urwid.AttrWrap(urwid.Text(''), 'help'))
+        self.help_msg.append(urwid.AttrWrap(urwid.Text(''), 'help'))
+
+        self.help = Popup(self.help_msg, ('help','help'), (0,1), self.view)
 
     def build_interface(self):
+        """
+        Build interface, refresh cache if needed, update stories listbox, create
+        header, footer, view and the loop.
+        """
         if self.cache_manager.is_outdated():
             self.cache_manager.refresh()
 
@@ -102,19 +104,25 @@ class HNGui(object):
                 self.view, self.palette,
                 screen=self.ui, handle_mouse=False,
                 unhandled_input=self.keystroke)
+
+        self.build_help()
         self.already_build = True
 
     def set_help(self):
+        """ Set help msg in footer """
         self.view.set_footer(urwid.AttrWrap(urwid.Text(self.help, align="center"), 'help'))
 
     def set_footer(self, msg):
+        """ Set centered footer message """
         self.view.set_footer(urwid.AttrWrap(urwid.Text(msg), 'footer'))
 
     def set_header(self, msg):
+        """ Set header story message """
         self.header_content[1] = urwid.AttrWrap(urwid.Text(msg, align="center"), 'title')
         self.view.set_header(urwid.Columns(self.header_content, dividechars=1))
 
     def keystroke(self, input):
+        """ All key bindings are computed here """
         # QUIT
         if input in ('q', 'Q'):
             raise urwid.ExitMainLoop()
@@ -179,9 +187,16 @@ class HNGui(object):
         elif input in self.bindings['reload_config'].split(','):
             self.reload_config()
         elif input in ('h', 'H', '?'):
-            self.set_help()
+            keys = True
+            while True:
+                if keys:
+                    self.ui.draw_screen(self.ui.get_cols_rows(), self.help.render(self.ui.get_cols_rows(), True));
+                    keys = self.ui.get_input()
+                    if 'h' or 'H' or '?' or 'escape' in keys:
+                        break
 
     def update_stories(self, stories):
+        """ Reload listbox and walker with new stories """
         items = []
         for story in stories:
             items.append(ItemWidget(story))
@@ -194,14 +209,20 @@ class HNGui(object):
             self.listbox = urwid.ListBox(self.walker)
 
     def open_webbrowser(self, url):
+        """ Handle url and open sub process with web browser """
         python_bin = sys.executable
         browser_output = subprocess.Popen([python_bin, '-m', 'webbrowser', '-t', url],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 
     def update(self):
+        """ Update footer about focus story """
         focus = self.listbox.get_focus()[0]
         self.set_footer('submitted %s by %s' % (focus.publishedTime, focus.submitter))
 
     def reload_config(self):
+        """
+        Create new Config object, reload colors, refresh cache
+        if needed and redraw screen.
+        """
         self.set_footer('Reloading configuration')
         self.config = Config()
         self.build_help()
@@ -214,6 +235,7 @@ class HNGui(object):
             self.cache_manager.cache_path = self.config.parser.get('settings', 'cache')
 
     def run(self):
+        """ Run the loop """
         urwid.connect_signal(self.walker, 'modified', self.update)
 
         try:

@@ -61,7 +61,7 @@ class Config(object):
         if not self.parser.has_option('keybindings', 'reload_config'):
             self.parser.set('keybindings', 'reload_config', 'ctrl R')
 
-        # Paths
+        # Paths
         if not self.parser.has_section('settings'):
             self.parser.add_section('settings')
 
@@ -85,7 +85,7 @@ class Config(object):
         if not self.parser.has_option('colors', 'title'):
             self.parser.set('colors', 'title', 'dark red,bold|light gray')
         if not self.parser.has_option('colors', 'help'):
-            self.parser.set('colors', 'help', 'black,bold|light gray')
+            self.parser.set('colors', 'help', 'black|dark cyan|standout')
 
         if not os.path.exists(self.config_path):
             self.parser.write(open(self.config_path, 'w'))

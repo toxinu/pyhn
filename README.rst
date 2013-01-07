@@ -105,6 +105,6 @@ License
 License is `AGPL3`_. See `LICENSE`_.
 
 .. _input: http://excess.org/urwid/docs/manual/userinput.html#keyboard-input
-.. _manual: http://excess.org/urwid/docs/reference/display_modules.html#urwid.BaseScreen.register_palette
+.. _manual: http://excess.org/urwid/docs/manual/displayattributes.html#foreground-and-background-settings
 .. _AGPL3: http://www.gnu.org/licenses/agpl.html
 .. _LICENSE: https://raw.github.com/socketubs/pyhn/master/LICENSE
