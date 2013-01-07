@@ -6,6 +6,7 @@ import subprocess
 
 from pyhn.config import Config
 from pyhn.popup import Popup
+from pyhn import __version__ as VERSION
 
 class ItemWidget(urwid.WidgetWrap):
 
@@ -68,9 +69,11 @@ class HNGui(object):
                     binding[0].replace('_', ' '))), 'help')
             self.help_msg.append(line)
         self.help_msg.append(urwid.AttrWrap(urwid.Text(''), 'help'))
-        self.help_msg.append(urwid.AttrWrap(urwid.Text(' Thanks for using Pyhn! '), 'title'))
+        self.help_msg.append(urwid.AttrWrap(urwid.Text(' Thanks for using Pyhn %s! ' % VERSION, align='center'), 'title'))
+        self.help_msg.append(urwid.AttrWrap(urwid.Text(''), 'help'))
         self.help_msg.append(urwid.AttrWrap(urwid.Text(' Website: http://github.com/socketubs/pyhn '), 'help'))
         self.help_msg.append(urwid.AttrWrap(urwid.Text(' Author : socketubs '), 'help'))
+        self.help_msg.append(urwid.AttrWrap(urwid.Text(''), 'help'))
         self.help_msg.append(urwid.AttrWrap(urwid.Text(''), 'help'))
         self.help_msg.append(urwid.AttrWrap(urwid.Text(''), 'help'))
 
