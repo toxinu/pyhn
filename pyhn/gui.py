@@ -15,6 +15,7 @@ class ItemWidget(urwid.WidgetWrap):
         self.title = story.title
         self.url = story.URL
         self.submitter = story.submitter
+        self.submitter_url = story.submitterURL
         self.comment_count = story.commentCount
         self.comments_url = story.commentsURL
         self.score = story.score
@@ -55,16 +56,27 @@ class HNGui(object):
         self.ui.run_wrapper(self.run)
 
     def build_help(self):
-        self.help = " %s: Go next - %s: Go prev - %s: Page up - %s: Page down - \
-t: Top - b: Best - n: Newest - %s: Refresh - Enter: Open link - \
-%s: Open comments link - %s: Reload configuration - h,?: Help - Q,Escape: Quit " % (
-                self.config.parser.get('keybindings', 'down'),
-                self.config.parser.get('keybindings', 'up'),
-                self.config.parser.get('keybindings', 'page_up'),
-                self.config.parser.get('keybindings', 'page_down'),
-                self.config.parser.get('keybindings', 'refresh'),
-                self.config.parser.get('keybindings', 'open_comments'),
-                self.config.parser.get('keybindings', 'reload_config'))
+        self.bindings = {}
+        for binding in self.config.parser.items('keybindings'):
+            self.bindings[binding[0]] = binding[1]
+        self.help = " %s: down - %s: up - %s: page up - %s: page down - %s: first story - \
+%s: last story - t: top - b: best - n: newest - %s: refresh - %s: open story link - %s: show story link - \
+%s: open comments link - %s: show comments link - %s: open submitter link - %s: show submitter link - \
+%s: reload configuration - h,?: help - q,escape: quit " % (
+                self.bindings['down'],
+                self.bindings['up'],
+                self.bindings['page_up'],
+                self.bindings['page_down'],
+                self.bindings['first_story'],
+                self.bindings['last_story'],
+                self.bindings['refresh'],
+                self.bindings['open_story_link'],
+                self.bindings['show_story_link'],
+                self.bindings['open_comments_link'],
+                self.bindings['show_comments_link'],
+                self.bindings['open_submitter_link'],
+                self.bindings['show_submitter_link'],
+                self.bindings['reload_config'])
 
     def build_interface(self):
         if self.cache_manager.is_outdated():
@@ -79,14 +91,17 @@ t: Top - b: Best - n: Newest - %s: Refresh - Enter: Open link - \
                 ('fixed', 5, urwid.Padding(urwid.AttrWrap(
                     urwid.Text('SCORE'), 'header'))),
                 ('fixed', 8, urwid.Padding(urwid.AttrWrap(
-                    urwid.Text('COMMENTS'), 'header'))),            
+                    urwid.Text('COMMENTS'), 'header'))),
             ]
 
         self.header = urwid.Columns(self.header_content, dividechars=1)
         self.footer = urwid.AttrMap(urwid.Text('Welcome in pyhn by socketubs (https://github.com/socketubs/pyhn)', align='center'), 'footer')
 
         self.view = urwid.Frame(urwid.AttrWrap(self.listbox, 'body'), header=self.header, footer=self.footer)
-        self.loop = urwid.MainLoop(self.view, self.palette, screen=self.ui, unhandled_input=self.keystroke)
+        self.loop = urwid.MainLoop(
+                self.view, self.palette,
+                screen=self.ui, handle_mouse=False,
+                unhandled_input=self.keystroke)
         self.already_build = True
 
     def set_help(self):
@@ -100,11 +115,39 @@ t: Top - b: Best - n: Newest - %s: Refresh - Enter: Open link - \
         self.view.set_header(urwid.Columns(self.header_content, dividechars=1))
 
     def keystroke(self, input):
+        # QUIT
         if input in ('q', 'Q'):
             raise urwid.ExitMainLoop()
-        elif input is 'enter':
+        # LINKS
+        elif input in self.bindings['open_story_link'].split(','):
             self.open_webbrowser(self.listbox.get_focus()[0].url)
-        elif input in ('n', 'N'):
+        elif input in self.bindings['show_story_link'].split(','):
+            self.set_footer(self.listbox.get_focus()[0].url)
+        elif input in self.bindings['open_comments_link'].split(','):
+            self.open_webbrowser(self.listbox.get_focus()[0].comments_url)
+        elif input in self.bindings['show_comments_link'].split(','):
+            self.set_footer(self.listbox.get_focus()[0].comments_url)
+        elif input in self.bindings['open_submitter_link'].split(','):
+            self.open_webbrowser(self.listbox.get_focus()[0].submitter_url)
+        elif input in self.bindings['show_submitter_link'].split(','):
+            self.set_footer(self.listbox.get_focus()[0].submitter_url)
+        # MOVEMENTS
+        elif input in self.bindings['down'].split(','):
+            if self.listbox.focus_position - 1 in self.walker.positions():
+                self.listbox.set_focus(self.walker.prev_position(self.listbox.focus_position))
+        elif input in self.bindings['up'].split(','):
+            if self.listbox.focus_position + 1 in self.walker.positions():
+                self.listbox.set_focus(self.walker.next_position(self.listbox.focus_position))
+        elif input in self.bindings['page_up'].split(','):
+            self.listbox._keypress_page_up(self.ui.get_cols_rows())
+        elif input in self.bindings['page_down'].split(','):
+            self.listbox._keypress_page_down(self.ui.get_cols_rows())
+        elif input in self.bindings['first_story'].split(','):
+            self.listbox.set_focus(self.walker.positions()[0])
+        elif input in self.bindings['last_story'].split(','):
+            self.listbox.set_focus(self.walker.positions()[-1])
+        # STORIES
+        elif input in ('n',):
             self.set_footer('Retrieving newest stories...')
             if self.cache_manager.is_outdated('newest'):
                 self.cache_manager.refresh('newest')
@@ -112,7 +155,7 @@ t: Top - b: Best - n: Newest - %s: Refresh - Enter: Open link - \
             self.update_stories(stories)
             self.set_header('NEWEST STORIES')
             self.which = "newest"
-        elif input in ('t', 'T'):
+        elif input in ('t',):
             self.set_footer('Retrieving top stories...')
             if self.cache_manager.is_outdated('top'):
                 self.cache_manager.refresh('top')
@@ -120,7 +163,7 @@ t: Top - b: Best - n: Newest - %s: Refresh - Enter: Open link - \
             self.update_stories(stories)
             self.set_header('TOP STORIES')
             self.which = "top"
-        elif input in ('b', 'B'):
+        elif input in ('b',):
             self.set_footer('Retrieving best stories...')
             if self.cache_manager.is_outdated('best'):
                 self.cache_manager.refresh('best')
@@ -128,26 +171,15 @@ t: Top - b: Best - n: Newest - %s: Refresh - Enter: Open link - \
             self.update_stories(stories)
             self.set_header('BEST STORIES')
             self.which = "best"
-        elif input in self.config.parser.get('keybindings', 'refresh').split(','):
+        # OTHERS
+        elif input in self.bindings['refresh'].split(','):
             self.cache_manager.refresh(self.which)
             stories = self.cache_manager.get_stories(self.which)
             self.update_stories(stories)
-        elif input in self.config.parser.get('keybindings', 'open_comments').split(','):
-            self.open_webbrowser(self.listbox.get_focus()[0].comments_url)
+        elif input in self.bindings['reload_config'].split(','):
+            self.reload_config()
         elif input in ('h', 'H', '?'):
             self.set_help()
-        elif input in self.config.parser.get('keybindings', 'down').split(','):
-            if self.listbox.focus_position - 1 in self.walker.positions():
-                self.listbox.set_focus(self.walker.prev_position(self.listbox.focus_position))
-        elif input in self.config.parser.get('keybindings', 'up').split(','):
-            if self.listbox.focus_position + 1 in self.walker.positions():
-                self.listbox.set_focus(self.walker.next_position(self.listbox.focus_position))
-        elif input in self.config.parser.get('keybindings', 'reload_config').split(','):
-            self.reload_config()
-        elif input in self.config.parser.get('keybindings', 'page_up').split(','):
-            self.listbox._keypress_page_up(self.ui.get_cols_rows())
-        elif input in self.config.parser.get('keybindings', 'page_down').split(','):
-            self.listbox._keypress_page_down(self.ui.get_cols_rows())
 
     def update_stories(self, stories):
         items = []
