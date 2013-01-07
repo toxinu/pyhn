@@ -163,7 +163,7 @@ class HackerNewsAPI:
         if commentCountString == "discuss":
             return 0
         elif commentCountString == "":
-            return 0
+            return -1
         else:
             commentCountString = commentCountString.split(' ')[0]
             return int(commentCountString)
@@ -197,7 +197,10 @@ class HackerNewsAPI:
         """
         Looks at source, makes stories from it, returns the stories.
         """
-        self.numberOfStoriesOnFrontPage = source.count("span id=score")
+        """ <td align=right valign=top class="title">31.</td> """
+        #self.numberOfStoriesOnFrontPage = source.count("span id=score")
+        self.numberOfStoriesOnFrontPage = 30
+
         # Create the empty stories.
         newsStories = []
         for i in range(0, self.numberOfStoriesOnFrontPage):
@@ -259,7 +262,8 @@ class HackerNewsAPI:
             if newsStories[i].id < 0:
                 idStart = newsStories[i].URL.find('item?id=') + 8
                 newsStories[i].commentsURL = ''
-                newsStories[i].submitter = 'Y Combinator'
+                newsStories[i].submitter = -1
+                newsStories[i].submitterURL = -1
 
         return newsStories
 

@@ -3,13 +3,14 @@ import os
 import sys
 import urwid
 import subprocess
+import threading
 
 from pyhn.config import Config
 from pyhn.popup import Popup
 from pyhn import __version__ as VERSION
 
 class ItemWidget(urwid.WidgetWrap):
-
+    """ Widget of listbox, represent each story """
     def __init__(self, story):
         self.story = story
         self.number = story.number
@@ -20,7 +21,19 @@ class ItemWidget(urwid.WidgetWrap):
         self.comment_count = story.commentCount
         self.comments_url = story.commentsURL
         self.score = story.score
-        self.publishedTime = story.publishedTime
+        self.published_time = story.publishedTime
+
+        if self.submitter == -1:
+            self.submitter = "-"
+            self.submitter_url = -1
+
+        if self.score == -1:
+            self.score = "-"
+
+        if self.comment_count == -1:
+            self.comment_count = "-"
+            self.comments_url = -1
+
         self.item = [
             ('fixed', 4, urwid.Padding(urwid.AttrWrap(
                 urwid.Text("%s:" % self.number, align="right"), 'body', 'focus'))),
@@ -41,6 +54,7 @@ class ItemWidget(urwid.WidgetWrap):
 
 
 class HNGui(object):
+    """ The Pyhn Gui object """
     def __init__(self, cache_manager):
         self.cache_manager = cache_manager
         self.already_build = False
@@ -117,7 +131,8 @@ class HNGui(object):
 
     def set_footer(self, msg):
         """ Set centered footer message """
-        self.view.set_footer(urwid.AttrWrap(urwid.Text(msg), 'footer'))
+        self.footer = urwid.AttrWrap(urwid.Text(msg), 'footer')
+        self.view.set_footer(self.footer)
 
     def set_header(self, msg):
         """ Set header story message """
@@ -135,13 +150,25 @@ class HNGui(object):
         elif input in self.bindings['show_story_link'].split(','):
             self.set_footer(self.listbox.get_focus()[0].url)
         elif input in self.bindings['open_comments_link'].split(','):
-            self.open_webbrowser(self.listbox.get_focus()[0].comments_url)
+            if self.listbox.get_focus()[0].comments_url == -1:
+                self.set_footer('No comments')
+            else:
+                self.open_webbrowser(self.listbox.get_focus()[0].comments_url)
         elif input in self.bindings['show_comments_link'].split(','):
-            self.set_footer(self.listbox.get_focus()[0].comments_url)
+            if self.listbox.get_focus()[0].comments_url == -1:
+                self.set_footer('No comments')
+            else:
+                self.set_footer(self.listbox.get_focus()[0].comments_url)
         elif input in self.bindings['open_submitter_link'].split(','):
-            self.open_webbrowser(self.listbox.get_focus()[0].submitter_url)
+            if self.listbox.get_focus()[0].submitter_url == -1:
+                self.set_footer('Anonymous submitter')
+            else:
+                self.open_webbrowser(self.listbox.get_focus()[0].submitter_url)
         elif input in self.bindings['show_submitter_link'].split(','):
-            self.set_footer(self.listbox.get_focus()[0].submitter_url)
+            if self.listbox.get_focus()[0].submitter_url == -1:
+                self.set_footer('Anonymous submitter')
+            else:
+                self.set_footer(self.listbox.get_focus()[0].submitter_url)
         # MOVEMENTS
         elif input in self.bindings['down'].split(','):
             if self.listbox.focus_position - 1 in self.walker.positions():
@@ -159,34 +186,15 @@ class HNGui(object):
             self.listbox.set_focus(self.walker.positions()[-1])
         # STORIES
         elif input in ('n',):
-            self.set_footer('Retrieving newest stories...')
-            if self.cache_manager.is_outdated('newest'):
-                self.cache_manager.refresh('newest')
-            stories = self.cache_manager.get_stories('newest')
-            self.update_stories(stories)
-            self.set_header('NEWEST STORIES')
-            self.which = "newest"
+            threading.Thread(None, self.async_refresher, None, ('newest','NEWEST STORIES'), {}).start()
         elif input in ('t',):
-            self.set_footer('Retrieving top stories...')
-            if self.cache_manager.is_outdated('top'):
-                self.cache_manager.refresh('top')
-            stories = self.cache_manager.get_stories('top')
-            self.update_stories(stories)
-            self.set_header('TOP STORIES')
-            self.which = "top"
+            threading.Thread(None, self.async_refresher, None, ('top','TOP STORIES'), {}).start()
         elif input in ('b',):
-            self.set_footer('Retrieving best stories...')
-            if self.cache_manager.is_outdated('best'):
-                self.cache_manager.refresh('best')
-            stories = self.cache_manager.get_stories('best')
-            self.update_stories(stories)
-            self.set_header('BEST STORIES')
-            self.which = "best"
+            self.set_footer('Syncing best stories...')
+            threading.Thread(None, self.async_refresher, None, ('best','BEST STORIES'), {}).start()
         # OTHERS
         elif input in self.bindings['refresh'].split(','):
-            self.cache_manager.refresh(self.which)
-            stories = self.cache_manager.get_stories(self.which)
-            self.update_stories(stories)
+            threading.Thread(None, self.async_refresher, None, (), {}).start()
         elif input in self.bindings['reload_config'].split(','):
             self.reload_config()
         elif input in ('h', 'H', '?'):
@@ -197,6 +205,18 @@ class HNGui(object):
                     keys = self.ui.get_input()
                     if 'h' or 'H' or '?' or 'escape' in keys:
                         break
+
+    def async_refresher(self, which=None, header=None):
+        if which is None:
+            which = self.which
+        if self.cache_manager.is_outdated(which):
+            self.cache_manager.refresh(which)
+        stories = self.cache_manager.get_stories(which)
+        self.update_stories(stories)
+        if header is not None:
+            self.set_header(header)
+            self.which = which
+        self.loop.draw_screen()
 
     def update_stories(self, stories):
         """ Reload listbox and walker with new stories """
@@ -219,7 +239,12 @@ class HNGui(object):
     def update(self):
         """ Update footer about focus story """
         focus = self.listbox.get_focus()[0]
-        self.set_footer('submitted %s by %s' % (focus.publishedTime, focus.submitter))
+        if focus.submitter == "":
+            msg = "submitted %s" % focus.published_time
+        else:
+            msg = "submitted %s by %s" % (focus.published_time, focus.submitter)
+
+        self.set_footer(msg)
 
     def reload_config(self):
         """

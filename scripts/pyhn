@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from pyhn import gui
-from pyhn.cachemanager import cacheManager
+from pyhn.cachemanager import CacheManager
 
-cachemanager = cacheManager()
+cachemanager = CacheManager()
 hn_gui = gui.HNGui(cachemanager)
 hn_gui.main()
