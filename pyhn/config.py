@@ -36,16 +36,30 @@ class Config(object):
             self.parser.set('keybindings', 'page_up', 'ctrl u')
         if not self.parser.has_option('keybindings', 'page_down'):
             self.parser.set('keybindings', 'page_down', 'ctrl d')
+        if not self.parser.has_option('keybindings', 'first_story'):
+            self.parser.set('keybindings', 'first_story', 'g')
+        if not self.parser.has_option('keybindings', 'last_story'):
+            self.parser.set('keybindings', 'last_story', 'G')
         if not self.parser.has_option('keybindings', 'up'):
             self.parser.set('keybindings', 'up', 'j')
         if not self.parser.has_option('keybindings', 'down'):
             self.parser.set('keybindings', 'down', 'k')
         if not self.parser.has_option('keybindings', 'refresh'):
-            self.parser.set('keybindings', 'refresh', 'r,R')
-        if not self.parser.has_option('keybindings', 'open_comments'):
-            self.parser.set('keybindings', 'open_comments', 'c,C')
+            self.parser.set('keybindings', 'refresh', 'r')
+        if not self.parser.has_option('keybindings', 'show_comments_link'):
+            self.parser.set('keybindings', 'show_comments_link', 'c')
+        if not self.parser.has_option('keybindings', 'open_comments_link'):
+            self.parser.set('keybindings', 'open_comments_link', 'C')
+        if not self.parser.has_option('keybindings', 'show_story_link'):
+            self.parser.set('keybindings', 'show_story_link', 's')
+        if not self.parser.has_option('keybindings', 'open_story_link'):
+            self.parser.set('keybindings', 'open_story_link', 'S,enter')
+        if not self.parser.has_option('keybindings', 'show_submitter_link'):
+            self.parser.set('keybindings', 'show_submitter_link', 'u')
+        if not self.parser.has_option('keybindings', 'open_submitter_link'):
+            self.parser.set('keybindings', 'open_submitter_link', 'U')
         if not self.parser.has_option('keybindings', 'reload_config'):
-            self.parser.set('keybindings', 'reload_config', 'ctrl r,ctrl R')
+            self.parser.set('keybindings', 'reload_config', 'ctrl R')
 
         # Paths
         if not self.parser.has_section('settings'):

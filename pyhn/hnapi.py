@@ -250,6 +250,7 @@ class HackerNewsAPI:
             newsStories[i].title = storyTitles[i]
             newsStories[i].score = storyScores[i]
             newsStories[i].submitter = storySubmitters[i]
+            newsStories[i].submitterURL = "http://news.ycombinator.com/user?id=" + storySubmitters[i]
             newsStories[i].commentCount = storyCommentCounts[i]
             newsStories[i].commentsURL = storyCommentURLs[i]
             newsStories[i].publishedTime = storyPublishedTime[i]

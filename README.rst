@@ -41,12 +41,19 @@ You can set key bindings, colors and more.
 This is an example file: ::
 
 	[keybindings]
-	page_up = ctrl d
-	page_down = ctrl u
+	open_story_link = S,enter
+	show_story_link = s
+	open_comments_link = C
+	show_comments_link = c
+	open_user_link = U
+	show_user_link = u
 	up = j
 	down = k
+	page_up = ctrl d
+	page_down = ctrl u
+  first_story = g
+  last_story = G
 	refresh = r,R
-	open_comments = a
 	reload_config = ctrl r,ctrl R
 
 	[settings]
