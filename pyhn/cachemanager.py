@@ -6,8 +6,8 @@ import datetime
 from pyhn.hnapi import HackerNewsAPI
 from pyhn.config import Config
 
+class CacheManager(object):
 
-class cacheManager(object):
     def __init__(self, cache_path=None):
         self.cache_path = cache_path
         if cache_path is None:
