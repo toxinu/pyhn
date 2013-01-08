@@ -58,7 +58,8 @@ This is an example file: ::
 
 	[settings]
 	cache = /home/socketubs/.pyhn/cache
-	cache_age = 5
+  cache_age = 5
+  browser_cmd = __default__
 	
 	[colors]
 	body = default||standout
@@ -72,6 +73,13 @@ Settings
 ~~~~~~~~
 
 ``cache_age`` is a minute indicator which say to ``CacheManager`` when cache is outdated.
+``browser_cmd`` is a bash command which will be use to open links.
+
+Examples: ::
+
+  browser_cmd = lynx __url__ | return
+  browser_cmd = __default__
+  browser_cmd = w3m __url | return
 
 Key bindings
 ~~~~~~~~~~~~
