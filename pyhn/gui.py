@@ -9,6 +9,7 @@ from pyhn.config import Config
 from pyhn.popup import Popup
 from pyhn import __version__ as VERSION
 
+
 class ItemWidget(urwid.WidgetWrap):
     """ Widget of listbox, represent each story """
     def __init__(self, story):
@@ -36,12 +37,16 @@ class ItemWidget(urwid.WidgetWrap):
 
         self.item = [
             ('fixed', 4, urwid.Padding(urwid.AttrWrap(
-                urwid.Text("%s:" % self.number, align="right"), 'body', 'focus'))),
+                urwid.Text("%s:" % self.number, align="right"),
+                'body',
+                'focus'))),
             urwid.AttrWrap(urwid.Text('%s' % self.title), 'body', 'focus'),
             ('fixed', 5, urwid.Padding(urwid.AttrWrap(
                 urwid.Text(str(self.score), align="right"), 'body', 'focus'))),
             ('fixed', 8, urwid.Padding(urwid.AttrWrap(
-                urwid.Text(str(self.comment_count), align="right"), 'body', 'focus'))),
+                urwid.Text(str(self.comment_count), align="right"),
+                'body',
+                'focus'))),
         ]
         w = urwid.Columns(self.item, focus_column=1, dividechars=1)
         self.__super.__init__(w)
@@ -64,7 +69,10 @@ class HNGui(object):
         self.palette = self.config.get_palette()
 
     def main(self):
-        """ Main Gui function which create Ui object, build interface and run the loop """
+        """
+        Main Gui function which create Ui object,
+        build interface and run the loop
+        """
         self.ui = urwid.raw_display.Screen()
         self.ui.register_palette(self.palette)
         self.build_interface()
@@ -78,12 +86,14 @@ class HNGui(object):
         self.help_msg.append(urwid.AttrWrap(urwid.Text(''), 'help'))
         for binding in self.config.parser.items('keybindings'):
             self.bindings[binding[0]] = binding[1]
-            line = urwid.AttrWrap(urwid.Text(' %s: %s ' % (
-                    binding[1],
-                    binding[0].replace('_', ' '))), 'help')
+            line = urwid.AttrWrap(
+                urwid.Text(' %s: %s ' % (binding[1], binding[0].replace('_', ' '))),
+                'help')
             self.help_msg.append(line)
         self.help_msg.append(urwid.AttrWrap(urwid.Text(''), 'help'))
-        self.help_msg.append(urwid.AttrWrap(urwid.Text(' Thanks for using Pyhn %s! ' % VERSION, align='center'), 'title'))
+        self.help_msg.append(urwid.AttrWrap(
+            urwid.Text(' Thanks for using Pyhn %s! ' % VERSION, align='center'),
+            'title'))
         self.help_msg.append(urwid.AttrWrap(urwid.Text(''), 'help'))
         self.help_msg.append(urwid.AttrWrap(urwid.Text(' Website: http://github.com/socketubs/pyhn '), 'help'))
         self.help_msg.append(urwid.AttrWrap(urwid.Text(' Author : socketubs '), 'help'))
@@ -91,7 +101,7 @@ class HNGui(object):
         self.help_msg.append(urwid.AttrWrap(urwid.Text(''), 'help'))
         self.help_msg.append(urwid.AttrWrap(urwid.Text(''), 'help'))
 
-        self.help = Popup(self.help_msg, ('help','help'), (0,1), self.view)
+        self.help = Popup(self.help_msg, ('help', 'help'), (0, 1), self.view)
 
     def build_interface(self):
         """
@@ -104,23 +114,21 @@ class HNGui(object):
         self.stories = self.cache_manager.get_stories()
         self.update_stories(self.stories)
         self.header_content = [
-                ('fixed', 4, urwid.Padding(urwid.AttrWrap(
-                    urwid.Text(' N°'), 'header'))),
+                ('fixed', 4, urwid.Padding(urwid.AttrWrap(urwid.Text(' N°'), 'header'))),
                 urwid.AttrWrap(urwid.Text('TOP STORIES', align="center"), 'title'),
-                ('fixed', 5, urwid.Padding(urwid.AttrWrap(
-                    urwid.Text('SCORE'), 'header'))),
-                ('fixed', 8, urwid.Padding(urwid.AttrWrap(
-                    urwid.Text('COMMENTS'), 'header'))),
-            ]
+                ('fixed', 5, urwid.Padding(urwid.AttrWrap(urwid.Text('SCORE'), 'header'))),
+                ('fixed', 8, urwid.Padding(urwid.AttrWrap(urwid.Text('COMMENTS'), 'header')))]
 
         self.header = urwid.Columns(self.header_content, dividechars=1)
-        self.footer = urwid.AttrMap(urwid.Text('Welcome in pyhn by socketubs (https://github.com/socketubs/pyhn)', align='center'), 'footer')
+        self.footer = urwid.AttrMap(
+            urwid.Text('Welcome in pyhn by socketubs (https://github.com/socketubs/pyhn)', align='center'),
+            'footer')
 
         self.view = urwid.Frame(urwid.AttrWrap(self.listbox, 'body'), header=self.header, footer=self.footer)
         self.loop = urwid.MainLoop(
-                self.view, self.palette,
-                screen=self.ui, handle_mouse=False,
-                unhandled_input=self.keystroke)
+                        self.view, self.palette,
+                        screen=self.ui, handle_mouse=False,
+                        unhandled_input=self.keystroke)
 
         self.build_help()
         self.already_build = True
@@ -190,12 +198,12 @@ class HNGui(object):
             self.listbox.set_focus(self.walker.positions()[-1])
         # STORIES
         elif input in ('n',):
-            threading.Thread(None, self.async_refresher, None, ('newest','NEWEST STORIES'), {}).start()
+            threading.Thread(None, self.async_refresher, None, ('newest', 'NEWEST STORIES'), {}).start()
         elif input in ('t',):
-            threading.Thread(None, self.async_refresher, None, ('top','TOP STORIES'), {}).start()
+            threading.Thread(None, self.async_refresher, None, ('top', 'TOP STORIES'), {}).start()
         elif input in ('b',):
             self.set_footer('Syncing best stories...')
-            threading.Thread(None, self.async_refresher, None, ('best','BEST STORIES'), {}).start()
+            threading.Thread(None, self.async_refresher, None, ('best', 'BEST STORIES'), {}).start()
         # OTHERS
         elif input in self.bindings['refresh'].split(','):
             threading.Thread(None, self.async_refresher, None, (), {}).start()
@@ -205,7 +213,7 @@ class HNGui(object):
             keys = True
             while True:
                 if keys:
-                    self.ui.draw_screen(self.ui.get_cols_rows(), self.help.render(self.ui.get_cols_rows(), True));
+                    self.ui.draw_screen(self.ui.get_cols_rows(), self.help.render(self.ui.get_cols_rows(), True))
                     keys = self.ui.get_input()
                     if 'h' or 'H' or '?' or 'escape' in keys:
                         break

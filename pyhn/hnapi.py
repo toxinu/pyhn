@@ -280,8 +280,8 @@ class HackerNewsAPI:
         """
         sourceNew1 = self.getSource("http://news.ycombinator.com/news")
         sourceNew2 = self.getSource("http://news.ycombinator.com/news2")
-        storiesNew1  = self.getStories(sourceNew1)
-        storiesNew2  = self.getStories(sourceNew2)
+        storiesNew1 = self.getStories(sourceNew1)
+        storiesNew2 = self.getStories(sourceNew2)
         stories = storiesNew1 + storiesNew2
         return stories
 
@@ -290,7 +290,7 @@ class HackerNewsAPI:
         Gets the newest stories from Hacker News.
         """
         source = self.getSource("http://news.ycombinator.com/newest")
-        stories  = self.getStories(source)
+        stories = self.getStories(source)
         return stories
 
     def getBestStories(self):
@@ -298,7 +298,7 @@ class HackerNewsAPI:
         Gets the "best" stories from Hacker News.
         """
         source = self.getSource("http://news.ycombinator.com/best")
-        stories  = self.getStories(source)
+        stories = self.getStories(source)
         return stories
 
     def getPageStories(self, pageId):
@@ -306,7 +306,7 @@ class HackerNewsAPI:
         Gets the pageId stories from Hacker News.
         """
         source = self.getSource("http://news.ycombinator.com/x?fnid=%s" % pageId)
-        stories  = self.getStories(source)
+        stories = self.getStories(source)
         return stories
 
 
@@ -314,16 +314,16 @@ class HackerNewsStory:
     """
     A class representing a story on Hacker News.
     """
-    id = 0      # The Hacker News ID of a story.
-    number = -1 # What rank the story is on HN.
-    title = ""  # The title of the story.
-    domain = "" # The website the story is from.
-    URL = ""    # The URL of the story.
-    score = -1  # Current score of the story.
-    submitter = ""  # The person that submitted the story.
-    commentCount = -1   # How many comments the story has.
-    commentsURL = ""    # The HN link for commenting (and upmodding).
-    publishedTime = ""  # The time sinc story was published
+    id = 0       # The Hacker News ID of a story.
+    number = -1  # What rank the story is on HN.
+    title = ""   # The title of the story.
+    domain = ""  # The website the story is from.
+    URL = ""     # The URL of the story.
+    score = -1   # Current score of the story.
+    submitter = ""       # The person that submitted the story.
+    commentCount = -1    # How many comments the story has.
+    commentsURL = ""     # The HN link for commenting (and upmodding).
+    publishedTime = ""   # The time sinc story was published
 
     def printDetails(self):
         """
@@ -346,9 +346,9 @@ class HackerNewsUser:
     A class representing a user on Hacker News.
     """
     karma = -10000  # Default value. I don't think anyone really has -10000 karma.
-    name = ""   # The user's HN username.
-    userPageURL = ""    # The URL of the user's 'user' page.
-    threadsPageURL = "" # The URL of the user's 'threads' page.
+    name = ""       # The user's HN username.
+    userPageURL = ""     # The URL of the user's 'user' page.
+    threadsPageURL = ""  # The URL of the user's 'threads' page.
 
     def __init__(self, username):
         """

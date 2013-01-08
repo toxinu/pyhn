@@ -6,6 +6,7 @@ import datetime
 from pyhn.hnapi import HackerNewsAPI
 from pyhn.config import Config
 
+
 class CacheManager(object):
 
     def __init__(self, cache_path=None):
@@ -42,7 +43,7 @@ class CacheManager(object):
         elif which == "best":
             stories = self.api.getBestStories()
         else:
-            raise Exception('Bad choice, can only refresh: top, newest and best stories')
+            raise Exception('Bad value: top, newest and best stories')
 
         cache = {}
         if os.path.exists(self.cache_path):
