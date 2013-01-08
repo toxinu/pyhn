@@ -129,10 +129,14 @@ class HNGui(object):
         """ Set help msg in footer """
         self.view.set_footer(urwid.AttrWrap(urwid.Text(self.help, align="center"), 'help'))
 
-    def set_footer(self, msg):
+    def set_footer(self, msg, style="normal"):
         """ Set centered footer message """
-        self.footer = urwid.AttrWrap(urwid.Text(msg), 'footer')
-        self.view.set_footer(self.footer)
+        if style == "normal":
+            self.footer = urwid.AttrWrap(urwid.Text(msg), 'footer')
+            self.view.set_footer(self.footer)
+        elif style == "error":
+            self.footer = urwid.AttrWrap(urwid.Text(msg), 'footer-error')
+            self.view.set_footer(self.footer)
 
     def set_header(self, msg):
         """ Set header story message """
@@ -235,11 +239,22 @@ class HNGui(object):
         """ Handle url and open sub process with web browser """
         if self.config.parser.get('settings', 'browser_cmd') == "__default__":
             python_bin = sys.executable
-            browser_output = subprocess.Popen([python_bin, '-m', 'webbrowser', '-t', url],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+            browser_output = subprocess.Popen(
+                [python_bin, '-m', 'webbrowser', '-t', url],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE)
         else:
             cmd = self.config.parser.get('settings', 'browser_cmd')
-            p = subprocess.Popen(cmd.replace('__url__', url), shell=True, close_fds=True)
-            p.wait()
+            p = subprocess.Popen(
+                cmd.replace('__url__', url),
+                shell=True,
+                close_fds=True,
+                stderr=subprocess.PIPE)
+
+            returncode = p.wait()
+            if returncode > 0:
+                stderr = p.communicate()[1]
+                self.set_footer("%s" % stderr, style="error")
 
     def update(self):
         """ Update footer about focus story """
