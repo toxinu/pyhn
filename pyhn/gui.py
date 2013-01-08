@@ -253,13 +253,18 @@ class HNGui(object):
                 stderr=subprocess.PIPE)
         else:
             cmd = self.config.parser.get('settings', 'browser_cmd')
-            p = subprocess.Popen(
-                cmd.replace('__url__', url),
-                shell=True,
-                close_fds=True,
-                stderr=subprocess.PIPE)
+            try:
+                p = subprocess.Popen(
+                    cmd.replace('__url__', url),
+                    shell=True,
+                    close_fds=True,
+                    stderr=subprocess.PIPE)
 
-            returncode = p.wait()
+                returncode = p.wait()
+            except KeyboardInterrupt:
+                stderr = "User keyboard interrupt detected!"
+                self.set_footer(stderr, style="error")
+                return
             if returncode > 0:
                 stderr = p.communicate()[1]
                 self.set_footer("%s" % stderr, style="error")
