@@ -3,6 +3,7 @@ import os
 import sys
 import urwid
 import subprocess
+import threading
 
 from pyhn.config import Config
 from pyhn.popup import Popup
@@ -232,13 +233,13 @@ class HNGui(object):
 
     def open_webbrowser(self, url):
         """ Handle url and open sub process with web browser """
-        if self.config.parser.get('browser', 'cmd') == "__default__":
+        if self.config.parser.get('settings', 'browser_cmd') == "__default__":
             python_bin = sys.executable
             browser_output = subprocess.Popen([python_bin, '-m', 'webbrowser', '-t', url],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
         else:
-            cmd = self.config.parser.get('browser', 'cmd')
-            p = subprocess.Popen(cmd.replace('__url__', url), shell=True, close_fds=False)
-            p.wait()
+            cmd = self.config.parser.get('settings', 'browser_cmd')
+            p = subprocess.Popen(cmd.replace('__url__', url), shell=True, close_fds=True)
+            #p.wait()
 
     def update(self):
         """ Update footer about focus story """
