@@ -239,7 +239,7 @@ class HNGui(object):
         else:
             cmd = self.config.parser.get('settings', 'browser_cmd')
             p = subprocess.Popen(cmd.replace('__url__', url), shell=True, close_fds=True)
-            #p.wait()
+            p.wait()
 
     def update(self):
         """ Update footer about focus story """

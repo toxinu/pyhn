@@ -80,6 +80,7 @@ Examples: ::
   browser_cmd = lynx __url__
   browser_cmd = __default__ 
   browser_cmd = w3m __url__ 
+  browser_cmd = echo "[INFO] Open with w3m: __url__" >> /tmp/pyhn.log && w3m __url__
 
 Key bindings
 ~~~~~~~~~~~~
