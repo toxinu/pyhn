@@ -56,17 +56,17 @@ This is an example file: ::
 	refresh = r,R
 	reload_config = ctrl r,ctrl R
 
-[settings]
-cache = /home/socketubs/.pyhn/cache
-cache_age = 5
-
-[colors]
-body = default||standout
-focus = black|light green|underline
-footer = black|light gray
-header = dark gray,bold|white|
-title = dark red,bold|light gray
-help = black,bold|light gray
+	[settings]
+	cache = /home/socketubs/.pyhn/cache
+	cache_age = 5
+	
+	[colors]
+	body = default||standout
+	focus = black|light green|underline
+	footer = black|light gray
+	header = dark gray,bold|white|
+	title = dark red,bold|light gray
+	help = black,bold|light gray
 
 Settings
 ~~~~~~~~
