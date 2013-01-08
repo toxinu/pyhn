@@ -21,16 +21,9 @@ Run it: ::
 Usage
 -----
 
-* **h**, **?**: Print help in footer
-* **j**: Go next story
-* **k**: Go prev story
-* **t**: Show top stories
-* **b**: Show best stories
-* **n**: Show newest stories
-* **r**: Refresh view
-* **Enter**: Open selected story in new web browser tab
-* **c**: Open selected story comments page in new web browser tab
-* **q**, **Escape**: Quit pyhn
+Use help for all key bindings:
+
+* **h**, **?**: Print help popup
 
 Configuration
 -------------
@@ -72,8 +65,8 @@ This is an example file: ::
 Settings
 ~~~~~~~~
 
-``cache_age`` is a minute indicator which say to ``CacheManager`` when cache is outdated.
-``browser_cmd`` is a bash command which will be use to open links.
+* ``cache_age`` is a minute indicator which say to ``CacheManager`` when cache is outdated
+* ``browser_cmd`` is a bash command which will be use to open links
 
 Examples: ::
 
