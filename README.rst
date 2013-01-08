@@ -65,6 +65,7 @@ This is an example file: ::
   body = default||standout
   focus = black|light green|underline
   footer = black|light gray
+  footer-error = dark red|light gray
   header = dark gray,bold|white|
   title = dark red,bold|light gray
   help = black,bold|light gray
