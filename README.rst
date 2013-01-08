@@ -77,9 +77,9 @@ Settings
 
 Examples: ::
 
-  browser_cmd = lynx __url__ | return
+  browser_cmd = lynx __url__
   browser_cmd = __default__ 
-  browser_cmd = w3m __url | return
+  browser_cmd = w3m __url__ 
 
 Key bindings
 ~~~~~~~~~~~~
