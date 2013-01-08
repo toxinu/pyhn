@@ -13,7 +13,9 @@ class Config(object):
         self.config_file = config_file
 
         if config_dir is None:
-            self.config_dir = os.path.join(os.environ.get('HOME', './'), '.pyhn')
+            self.config_dir = os.path.join(
+                os.environ.get('HOME', './'),
+                '.pyhn')
         if config_file is None:
             self.config_file = "config"
 
@@ -66,12 +68,14 @@ class Config(object):
             self.parser.add_section('settings')
 
         if not self.parser.has_option('settings', 'cache'):
-            self.parser.set('settings', 'cache', os.path.join(os.environ.get('HOME', './'), '.pyhn', 'cache'))
+            self.parser.set(
+                'settings',
+                'cache',
+                os.path.join(os.environ.get('HOME', './'), '.pyhn', 'cache'))
         if not self.parser.has_option('settings', 'cache_age'):
             self.parser.set('settings', 'cache_age', "5")
         if not self.parser.has_option('settings', 'browser_cmd'):
             self.parser.set('settings', 'browser_cmd', '__default__')
-
 
         # Colors
         if not self.parser.has_section('colors'):

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import urwid
 
+
 class Popup(urwid.WidgetWrap):
     """
     Creates a popup menu on top of another BoxWidget.
@@ -21,8 +22,6 @@ class Popup(urwid.WidgetWrap):
         body -- widget displayed beneath the message widget
         """
 
-#        content = [urwid.AttrWrap(urwid.Text(" " + w), None, attr[1])
-#                   for w in menu_list]
         content = [w for w in menu_list]
 
         # Calculate width and height of the menu widget:
@@ -39,7 +38,6 @@ class Popup(urwid.WidgetWrap):
 
         urwid.WidgetWrap.__init__(self, overlay)
 
-
     def keypress(self, size, key):
         """
         <RETURN> key selects an item, other keys will be passed to
@@ -49,7 +47,6 @@ class Popup(urwid.WidgetWrap):
         if key == "enter":
             (widget, foo) = self._listbox.get_focus()
             (text, foo) = widget.get_text()
-            self.selected = text[1:] # Get rid of the leading space...
+            self.selected = text[1:]  # Get rid of the leading space...
         else:
             return self._listbox.keypress(size, key)
-
