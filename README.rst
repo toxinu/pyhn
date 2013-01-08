@@ -40,34 +40,34 @@ You can set key bindings, colors and more.
 
 This is an example file: ::
 
-	[keybindings]
-	open_story_link = S,enter
-	show_story_link = s
-	open_comments_link = C
-	show_comments_link = c
-	open_user_link = U
-	show_user_link = u
-	up = j
-	down = k
-	page_up = ctrl d
-	page_down = ctrl u
-	first_story = g
-	last_story = G
-	refresh = r,R
-	reload_config = ctrl r,ctrl R
-
-	[settings]
-	cache = /home/socketubs/.pyhn/cache
+  [keybindings]
+  open_story_link = S,enter
+  show_story_link = s
+  open_comments_link = C
+  show_comments_link = c
+  open_user_link = U
+  show_user_link = u
+  up = j
+  down = k
+  page_up = ctrl d
+  page_down = ctrl u
+  first_story = g
+  last_story = G
+  refresh = r,R
+  reload_config = ctrl r,ctrl R
+  
+  [settings]
+  cache = /home/socketubs/.pyhn/cache
   cache_age = 5
   browser_cmd = __default__
-	
-	[colors]
-	body = default||standout
-	focus = black|light green|underline
-	footer = black|light gray
-	header = dark gray,bold|white|
-	title = dark red,bold|light gray
-	help = black,bold|light gray
+  	
+  [colors]
+  body = default||standout
+  focus = black|light green|underline
+  footer = black|light gray
+  header = dark gray,bold|white|
+  title = dark red,bold|light gray
+  help = black,bold|light gray
 
 Settings
 ~~~~~~~~
@@ -78,7 +78,7 @@ Settings
 Examples: ::
 
   browser_cmd = lynx __url__ | return
-  browser_cmd = __default__
+  browser_cmd = __default__ 
   browser_cmd = w3m __url | return
 
 Key bindings
