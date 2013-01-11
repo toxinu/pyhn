@@ -156,10 +156,6 @@ class HNGui(object):
         if input in ('q', 'Q'):
             raise urwid.ExitMainLoop()
         # LINKS
-        if input in self.bindings['open_story_link'].split(','):
-            self.open_webbrowser(self.listbox.get_focus()[0].url)
-        if input in self.bindings['show_story_link'].split(','):
-            self.set_footer(self.listbox.get_focus()[0].url)
         if input in self.bindings['open_comments_link'].split(','):
             if self.listbox.get_focus()[0].comments_url == -1:
                 self.set_footer('No comments')
@@ -170,6 +166,10 @@ class HNGui(object):
                 self.set_footer('No comments')
             else:
                 self.set_footer(self.listbox.get_focus()[0].comments_url)
+        if input in self.bindings['open_story_link'].split(','):
+            self.open_webbrowser(self.listbox.get_focus()[0].url)
+        if input in self.bindings['show_story_link'].split(','):
+            self.set_footer(self.listbox.get_focus()[0].url)
         if input in self.bindings['open_submitter_link'].split(','):
             if self.listbox.get_focus()[0].submitter_url == -1:
                 self.set_footer('Anonymous submitter')
