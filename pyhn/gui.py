@@ -63,6 +63,7 @@ class HNGui(object):
     def __init__(self, cache_manager):
         self.cache_manager = cache_manager
         self.already_build = False
+        self.on_comments = False
         self.which = "top"
 
         self.config = Config()
@@ -165,6 +166,12 @@ class HNGui(object):
             if self.listbox.get_focus()[0].comments_url == -1:
                 self.set_footer('No comments')
             else:
+                if not self.oncomments:
+                    self.show_comments(self.listbox.get_focus()[0])
+                    self.on_comments = True
+                else:
+                    self.update_stories(self.cache_manager.get_stories(self.which))
+                    self.on_comments = False
                 self.open_webbrowser(self.listbox.get_focus()[0].comments_url)
         elif input in self.bindings['show_comments_link'].split(','):
             if self.listbox.get_focus()[0].comments_url == -1:
@@ -242,6 +249,10 @@ class HNGui(object):
         else:
             self.walker = urwid.SimpleListWalker(items)
             self.listbox = urwid.ListBox(self.walker)
+
+    def show_comments(self, story):
+        items = []
+        for c
 
     def open_webbrowser(self, url):
         """ Handle url and open sub process with web browser """
