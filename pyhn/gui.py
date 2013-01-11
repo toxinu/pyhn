@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import os
 import sys
 import urwid
 import subprocess
@@ -157,59 +156,59 @@ class HNGui(object):
         if input in ('q', 'Q'):
             raise urwid.ExitMainLoop()
         # LINKS
-        elif input in self.bindings['open_story_link'].split(','):
+        if input in self.bindings['open_story_link'].split(','):
             self.open_webbrowser(self.listbox.get_focus()[0].url)
-        elif input in self.bindings['show_story_link'].split(','):
+        if input in self.bindings['show_story_link'].split(','):
             self.set_footer(self.listbox.get_focus()[0].url)
-        elif input in self.bindings['open_comments_link'].split(','):
+        if input in self.bindings['open_comments_link'].split(','):
             if self.listbox.get_focus()[0].comments_url == -1:
                 self.set_footer('No comments')
             else:
                 self.open_webbrowser(self.listbox.get_focus()[0].comments_url)
-        elif input in self.bindings['show_comments_link'].split(','):
+        if input in self.bindings['show_comments_link'].split(','):
             if self.listbox.get_focus()[0].comments_url == -1:
                 self.set_footer('No comments')
             else:
                 self.set_footer(self.listbox.get_focus()[0].comments_url)
-        elif input in self.bindings['open_submitter_link'].split(','):
+        if input in self.bindings['open_submitter_link'].split(','):
             if self.listbox.get_focus()[0].submitter_url == -1:
                 self.set_footer('Anonymous submitter')
             else:
                 self.open_webbrowser(self.listbox.get_focus()[0].submitter_url)
-        elif input in self.bindings['show_submitter_link'].split(','):
+        if input in self.bindings['show_submitter_link'].split(','):
             if self.listbox.get_focus()[0].submitter_url == -1:
                 self.set_footer('Anonymous submitter')
             else:
                 self.set_footer(self.listbox.get_focus()[0].submitter_url)
         # MOVEMENTS
-        elif input in self.bindings['down'].split(','):
+        if input in self.bindings['down'].split(','):
             if self.listbox.focus_position - 1 in self.walker.positions():
                 self.listbox.set_focus(self.walker.prev_position(self.listbox.focus_position))
-        elif input in self.bindings['up'].split(','):
+        if input in self.bindings['up'].split(','):
             if self.listbox.focus_position + 1 in self.walker.positions():
                 self.listbox.set_focus(self.walker.next_position(self.listbox.focus_position))
-        elif input in self.bindings['page_up'].split(','):
+        if input in self.bindings['page_up'].split(','):
             self.listbox._keypress_page_up(self.ui.get_cols_rows())
-        elif input in self.bindings['page_down'].split(','):
+        if input in self.bindings['page_down'].split(','):
             self.listbox._keypress_page_down(self.ui.get_cols_rows())
-        elif input in self.bindings['first_story'].split(','):
+        if input in self.bindings['first_story'].split(','):
             self.listbox.set_focus(self.walker.positions()[0])
-        elif input in self.bindings['last_story'].split(','):
+        if input in self.bindings['last_story'].split(','):
             self.listbox.set_focus(self.walker.positions()[-1])
         # STORIES
-        elif input in ('n',):
+        if input in ('n',):
             threading.Thread(None, self.async_refresher, None, ('newest', 'NEWEST STORIES'), {}).start()
-        elif input in ('t',):
+        if input in ('t',):
             threading.Thread(None, self.async_refresher, None, ('top', 'TOP STORIES'), {}).start()
-        elif input in ('b',):
+        if input in ('b',):
             self.set_footer('Syncing best stories...')
             threading.Thread(None, self.async_refresher, None, ('best', 'BEST STORIES'), {}).start()
         # OTHERS
-        elif input in self.bindings['refresh'].split(','):
+        if input in self.bindings['refresh'].split(','):
             threading.Thread(None, self.async_refresher, None, (), {}).start()
-        elif input in self.bindings['reload_config'].split(','):
+        if input in self.bindings['reload_config'].split(','):
             self.reload_config()
-        elif input in ('h', 'H', '?'):
+        if input in ('h', 'H', '?'):
             keys = True
             while True:
                 if keys:
