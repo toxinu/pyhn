@@ -19,7 +19,7 @@ Run it: ::
 	pyhn
 
 Arch Linux
-==========
+~~~~~~~~~~
 
 ``pyhn`` is available in the AUR_.
 
