@@ -33,7 +33,7 @@ Use help for all key bindings:
 Configuration
 -------------
 
-By default, configuration file is in your ``$HOME/.pyhn/confi``.
+By default, configuration file is in your ``$HOME/.pyhn/config``.
 You can set key bindings, colors and more.
 
 This is an example file: ::
