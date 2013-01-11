@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=640" />
+
+    <link rel="stylesheet" href="stylesheets/core.css" media="screen"/>
+    <link rel="stylesheet" href="stylesheets/mobile.css" media="handheld, only screen and (max-device-width:640px)"/>
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css"/>
+
+    <script type="text/javascript" src="javascripts/modernizr.js"></script>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script type="text/javascript" src="javascripts/headsmart.min.js"></script>
+    <script type="text/javascript">
+      $(document).ready(function () {
+        $('#main_content').headsmart()
+      })
+    </script>
+    <title>Pyhn by socketubs</title>
+  </head>
+
+  <body>
+    <a id="forkme_banner" href="https://github.com/socketubs/pyhn">View on GitHub</a>
+    <div class="shell">
+
+      <header>
+        <span class="ribbon-outer">
+          <span class="ribbon-inner">
+            <h1>Pyhn</h1>
+            <h2>Hacker news command line client</h2>
+          </span>
+          <span class="left-tail"></span>
+          <span class="right-tail"></span>
+        </span>
+      </header>
+
+      <section id="downloads">
+        <span class="inner">
+          <a href="https://github.com/socketubs/pyhn/zipball/master" class="zip"><em>download</em> .ZIP</a><a href="https://github.com/socketubs/pyhn/tarball/master" class="tgz"><em>download</em> .TGZ</a>
+        </span>
+      </section>
+
+
+      <span class="banner-fix"></span>
+
+
+      <section id="main_content">
+        <h1>Pyhn, Hacker news in your terminal</h1>
+
+<p><img src="https://dl.dropbox.com/s/swxcq2uk797309c/Screenshot%20at%202013-01-05%2018%3A38%3A59.png" alt="image">
+Don’t be worry about your IP. Pyhn is not aggresive, it uses cache.</p>
+
+<h2> Installation</h2>
+
+<p>Using pip:</p>
+
+<pre><code>pip install pyhn
+</code></pre>
+
+<p>Run it:</p>
+
+<pre><code>pyhn
+</code></pre>
+
+<h3> Arch Linux</h3>
+
+<p><code>pyhn</code> is available in the <a href="https://aur.archlinux.org/packages/pyhn/">AUR</a>.</p>
+
+<h2> Usage</h2>
+
+<p>Use help for all key bindings:</p>
+
+<ul>
+<li>  <strong>h</strong>, <strong>?</strong>: Print help popup</li>
+</ul><h2>Configuration</h2>
+
+<p>By default, configuration file is in your <code>$HOME/.pyhn/config</code>. You can
+set key bindings, colors and more.</p>
+
+<p>This is an example file:</p>
+
+<pre><code>[keybindings]
+open_story_link = S,enter
+show_story_link = s
+open_comments_link = C
+show_comments_link = c
+open_user_link = U
+show_user_link = u
+up = j
+down = k
+page_up = ctrl d
+page_down = ctrl u
+first_story = g
+last_story = G
+refresh = r,R
+reload_config = ctrl r,ctrl R
+
+[settings]
+cache = /home/socketubs/.pyhn/cache
+cache_age = 5
+browser_cmd = __default__
+
+[colors]
+body = default||standout
+focus = black|light green|underline
+footer = black|light gray
+footer-error = dark red,bold|light gray
+header = dark gray,bold|white|
+title = dark red,bold|light gray
+help = black,bold|light gray
+</code></pre>
+
+<h2>Settings</h2>
+
+<ul>
+<li>  <code>cache_age</code> is a minute indicator which say to <code>CacheManager</code> when
+cache is outdated</li>
+<li>  <code>browser_cmd</code> is a bash command which will be use to open links</li>
+</ul><p>Examples:</p>
+
+<pre><code>browser_cmd = lynx __url__
+browser_cmd = __default__ 
+browser_cmd = w3m __url__ 
+browser_cmd = echo "[INFO] Open with w3m: __url__" &gt;&gt; /tmp/pyhn.log &amp;&amp; w3m __url__
+</code></pre>
+
+<h3>Key bindings</h3>
+
+<p>You can set different key bindings for same action with a comma
+separator. Take a look at <code>urwid</code> <a href="http://excess.org/urwid/docs/manual/userinput.html#keyboard-input">input</a> manual.</p>
+
+<h3>Colors</h3>
+
+<p>Colors options are designed like that:
+<code>foreground|background|monochrome</code>.</p>
+
+<p><strong>foreground</strong></p>
+
+<ul>
+<li>  <em>colors</em>: ‘default’ (use the terminal’s default foreground),
+‘black’, ‘dark red’, ‘dark green’, ‘brown’, ‘dark blue’, ‘dark
+magenta’, ‘dark cyan’, ‘light gray’, ‘dark gray’, ‘light red’,
+‘light green’, ‘yellow’, ‘light blue’, ‘light magenta’, ‘light
+cyan’, ‘white’</li>
+<li>  <em>settings</em>: ‘bold’, ‘underline’, ‘blink’, ‘standout’</li>
+</ul><p><strong>background</strong></p>
+
+<ul>
+<li>  <em>colors</em>: ‘default’ (use the terminal’s default background),
+‘black’, ‘dark red’, ‘dark green’, ‘brown’, ‘dark blue’, ‘dark
+magenta’, ‘dark cyan’, ‘light gray’</li>
+</ul><p><strong>monochrome</strong></p>
+
+<ul>
+<li>  <em>settings</em> : ‘bold’, ‘underline’, ‘blink’, ‘standout’</li>
+</ul><p>For more informations you can take a loot at <code>urwid</code> <a href="http://excess.org/urwid/docs/manual/displayattributes.html#foreground-and-background-settings">manual</a>.</p>
+
+<h2>License</h2>
+
+<p>License is <a href="http://www.gnu.org/licenses/agpl.html">AGPL3</a>. See <a href="https://raw.github.com/socketubs/pyhn/master/LICENSE">LICENSE</a>.</p>
+      </section>
+
+      <footer>
+        <span class="ribbon-outer">
+          <span class="ribbon-inner">
+            <p>this project by <a href="https://github.com/socketubs">socketubs</a> can be found on <a href="https://github.com/socketubs/pyhn">GitHub</a></p>
+          </span>
+          <span class="left-tail"></span>
+          <span class="right-tail"></span>
+        </span>
+        <p>Generated with <a href="http://pages.github.com">GitHub Pages</a> using Merlot</p>
+        <span class="octocat"></span>
+      </footer>
+
+    </div>
+
+    
+  </body>
+</html>
