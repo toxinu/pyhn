@@ -33,12 +33,14 @@ Features:
 
 import urwid
 import os
+import json
+from pprint import pprint
 
 
 class ExampleTreeWidget(urwid.TreeWidget):
     """ Display widget for leaf nodes """
     def get_display_text(self):
-        return self.get_node().get_value()['name']
+        return self.get_node().get_value()["name"]
 
 
 class ExampleNode(urwid.TreeNode):
@@ -64,6 +66,9 @@ class ExampleParentNode(urwid.ParentNode):
             childclass = ExampleParentNode
         else:
             childclass = ExampleNode
+            print(self)
+            print(key)
+            print(childdepth)
         return childclass(childdata, parent=self, key=key, depth=childdepth)
 
 
@@ -118,14 +123,25 @@ class ExampleTreeBrowser:
 
 def get_example_tree():
     """ generate a quick 100 leaf tree for demo purposes """
-    retval = {"name":"parent","children":[]}
-    for i in range(10):
-        retval['children'].append({"name":"child " + str(i)})
-        retval['children'][i]['children']=[]
-        for j in range(10):
-            retval['children'][i]['children'].append({"name":"grandchild " + 
-                                                      str(i) + "." + str(j)})
+    f = open("comments.data", "r").read()
+    info = json.loads(f)[0]
+    s = "%s %s\n%s" % (info["username"], info["time"], info["comment"])    
+    retval = {"name":s,"children":[]}
+    pprint(info)
+    for i in range(len(info["children"])): 
+        l = get_example_tree_recursion(info["children"][i],i=i)
+        retval["children"].append(l)
     return retval
+
+def get_example_tree_recursion(info,i=None):
+    s = "%s %s\n%s" % (info["username"], info["time"], info["comment"])
+    n = {"name": s}
+    if info.get("children"):
+        n["children"]=[]
+    for j in range(len(info["children"])):
+            l = get_example_tree_recursion(info["children"][j],i=j)
+            n["children"].append(l)
+    return n
 
 
 def main():
