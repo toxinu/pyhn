@@ -251,7 +251,6 @@ class HNGui(object):
 
     def show_comments(self, story):
         items = []
-        for c
 
     def open_webbrowser(self, url):
         """ Handle url and open sub process with web browser """
