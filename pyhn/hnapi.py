@@ -35,6 +35,7 @@ or implied, of Scott Jackson.
 """
 import isit
 import re
+import json
 
 from bs4 import BeautifulSoup
 
@@ -324,6 +325,21 @@ class HackerNewsStory:
     commentCount = -1    # How many comments the story has.
     commentsURL = ""     # The HN link for commenting (and upmodding).
     publishedTime = ""   # The time sinc story was published
+
+    def getComments(self):
+        url = 'http://hndroidapi.appspot.com/nestedcomments/format/json/id/%s' % self.id
+        try:
+            if isit.py3:
+                f = urllib.request.urlopen(url)
+            else:
+                f = urllib2.urlopen(url)
+
+            source = f.read()
+            f.close()
+            self.comments =  json.loads(source.decode('utf-8'))['items']
+            return self.comments
+        except URLError:
+            raise HNException("Error getting source from " + url + ". Your internet connection may have something funny going on, or you could be behind a proxy.")
 
     def printDetails(self):
         """
