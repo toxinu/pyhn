@@ -161,7 +161,7 @@ class HNGui(object):
             if self.listbox.get_focus()[0].comments_url == -1:
                 self.set_footer('No comments')
             else:
-                if not self.oncomments:
+                if not self.on_comments:
                     self.show_comments(self.listbox.get_focus()[0])
                     self.on_comments = True
                 else:
