@@ -212,6 +212,7 @@ class HNGui(object):
             threading.Thread(None, self.async_refresher, None, ('best', 'BEST STORIES'), {}).start()
         # OTHERS
         if input in self.bindings['refresh'].split(','):
+            self.set_footer('Refreshing new stories...')
             threading.Thread(None, self.async_refresher, None, (), {}).start()
         if input in self.bindings['reload_config'].split(','):
             self.reload_config()
