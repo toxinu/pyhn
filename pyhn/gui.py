@@ -4,6 +4,8 @@ import urwid
 import subprocess
 import threading
 
+from urlparse import urlparse
+
 from pyhn.config import Config
 from pyhn.popup import Popup
 from pyhn import __version__ as VERSION
@@ -16,6 +18,7 @@ class ItemWidget(urwid.WidgetWrap):
         self.number = story.number
         self.title = story.title
         self.url = story.URL
+        self.domain = urlparse(story.domain).netloc
         self.submitter = story.submitter
         self.submitter_url = story.submitterURL
         self.comment_count = story.commentCount
@@ -39,7 +42,7 @@ class ItemWidget(urwid.WidgetWrap):
                 urwid.Text("%s:" % self.number, align="right"),
                 'body',
                 'focus'))),
-            urwid.AttrWrap(urwid.Text('%s' % self.title), 'body', 'focus'),
+            urwid.AttrWrap(urwid.Text('%s (%s)' % (self.title, self.domain)), 'body', 'focus'),
             ('fixed', 5, urwid.Padding(urwid.AttrWrap(
                 urwid.Text(str(self.score), align="right"), 'body', 'focus'))),
             ('fixed', 8, urwid.Padding(urwid.AttrWrap(
@@ -95,8 +98,13 @@ class HNGui(object):
             urwid.Text(' Thanks for using Pyhn %s! ' % VERSION, align='center'),
             'title'))
         self.help_msg.append(urwid.AttrWrap(urwid.Text(''), 'help'))
-        self.help_msg.append(urwid.AttrWrap(urwid.Text(' Website: http://github.com/socketubs/pyhn '), 'help'))
         self.help_msg.append(urwid.AttrWrap(urwid.Text(' Author : socketubs '), 'help'))
+        self.help_msg.append(urwid.AttrWrap(
+            urwid.Text(' Code   : https://github.com/socketubs/pyhn '),
+            'help'))
+        self.help_msg.append(urwid.AttrWrap(
+            urwid.Text(' Website: http://socketubs.org '),
+            'help'))
         self.help_msg.append(urwid.AttrWrap(urwid.Text(''), 'help'))
         self.help_msg.append(urwid.AttrWrap(urwid.Text(''), 'help'))
         self.help_msg.append(urwid.AttrWrap(urwid.Text(''), 'help'))
@@ -114,28 +122,34 @@ class HNGui(object):
         self.stories = self.cache_manager.get_stories()
         self.update_stories(self.stories)
         self.header_content = [
-                ('fixed', 4, urwid.Padding(urwid.AttrWrap(urwid.Text(' N°'), 'header'))),
-                urwid.AttrWrap(urwid.Text('TOP STORIES', align="center"), 'title'),
-                ('fixed', 5, urwid.Padding(urwid.AttrWrap(urwid.Text('SCORE'), 'header'))),
-                ('fixed', 8, urwid.Padding(urwid.AttrWrap(urwid.Text('COMMENTS'), 'header')))]
+            ('fixed', 4, urwid.Padding(urwid.AttrWrap(urwid.Text(' N°'), 'header'))),
+            urwid.AttrWrap(urwid.Text('TOP STORIES', align="center"), 'title'),
+            ('fixed', 5, urwid.Padding(urwid.AttrWrap(urwid.Text('SCORE'), 'header'))),
+            ('fixed', 8, urwid.Padding(urwid.AttrWrap(urwid.Text('COMMENTS'), 'header')))]
 
         self.header = urwid.Columns(self.header_content, dividechars=1)
         self.footer = urwid.AttrMap(
-            urwid.Text('Welcome in pyhn by socketubs (https://github.com/socketubs/pyhn)', align='center'),
+            urwid.Text(
+                'Welcome in pyhn by socketubs (https://github.com/socketubs/pyhn)',
+                align='center'),
             'footer')
 
-        self.view = urwid.Frame(urwid.AttrWrap(self.listbox, 'body'), header=self.header, footer=self.footer)
+        self.view = urwid.Frame(
+            urwid.AttrWrap(self.listbox, 'body'), header=self.header, footer=self.footer)
         self.loop = urwid.MainLoop(
-                        self.view, self.palette,
-                        screen=self.ui, handle_mouse=False,
-                        unhandled_input=self.keystroke)
+            self.view,
+            self.palette,
+            screen=self.ui,
+            handle_mouse=False,
+            unhandled_input=self.keystroke)
 
         self.build_help()
         self.already_build = True
 
     def set_help(self):
         """ Set help msg in footer """
-        self.view.set_footer(urwid.AttrWrap(urwid.Text(self.help, align="center"), 'help'))
+        self.view.set_footer(
+            urwid.AttrWrap(urwid.Text(self.help, align="center"), 'help'))
 
     def set_footer(self, msg, style="normal"):
         """ Set centered footer message """
@@ -190,10 +204,12 @@ class HNGui(object):
         # MOVEMENTS
         if input in self.bindings['down'].split(','):
             if self.listbox.focus_position - 1 in self.walker.positions():
-                self.listbox.set_focus(self.walker.prev_position(self.listbox.focus_position))
+                self.listbox.set_focus(
+                    self.walker.prev_position(self.listbox.focus_position))
         if input in self.bindings['up'].split(','):
             if self.listbox.focus_position + 1 in self.walker.positions():
-                self.listbox.set_focus(self.walker.next_position(self.listbox.focus_position))
+                self.listbox.set_focus(
+                    self.walker.next_position(self.listbox.focus_position))
         if input in self.bindings['page_up'].split(','):
             self.listbox._keypress_page_up(self.ui.get_cols_rows())
         if input in self.bindings['page_down'].split(','):
@@ -203,13 +219,24 @@ class HNGui(object):
         if input in self.bindings['last_story'].split(','):
             self.listbox.set_focus(self.walker.positions()[-1])
         # STORIES
-        if input in ('n',):
-            threading.Thread(None, self.async_refresher, None, ('newest', 'NEWEST STORIES'), {}).start()
-        if input in ('t',):
-            threading.Thread(None, self.async_refresher, None, ('top', 'TOP STORIES'), {}).start()
-        if input in ('b',):
+        if input in self.bindings['newest_stories'].split(','):
+            threading.Thread(
+                None,
+                self.async_refresher,
+                None,
+                ('newest', 'NEWEST STORIES'),
+                {}).start()
+        if input in self.bindings['top_stories'].split(','):
+            threading.Thread(
+                None,
+                self.async_refresher,
+                None,
+                ('top', 'TOP STORIES'),
+                {}).start()
+        if input in self.bindings['best_stories'].split(','):
             self.set_footer('Syncing best stories...')
-            threading.Thread(None, self.async_refresher, None, ('best', 'BEST STORIES'), {}).start()
+            threading.Thread(
+                None, self.async_refresher, None, ('best', 'BEST STORIES'), {}).start()
         # OTHERS
         if input in self.bindings['refresh'].split(','):
             self.set_footer('Refreshing new stories...')
@@ -220,7 +247,9 @@ class HNGui(object):
             keys = True
             while True:
                 if keys:
-                    self.ui.draw_screen(self.ui.get_cols_rows(), self.help.render(self.ui.get_cols_rows(), True))
+                    self.ui.draw_screen(
+                        self.ui.get_cols_rows(),
+                        self.help.render(self.ui.get_cols_rows(), True))
                     keys = self.ui.get_input()
                     if 'h' or 'H' or '?' or 'escape' in keys:
                         break
@@ -251,13 +280,14 @@ class HNGui(object):
             self.listbox = urwid.ListBox(self.walker)
 
     def show_comments(self, story):
-        items = []
+        #items = []
+        pass
 
     def open_webbrowser(self, url):
         """ Handle url and open sub process with web browser """
         if self.config.parser.get('settings', 'browser_cmd') == "__default__":
             python_bin = sys.executable
-            browser_output = subprocess.Popen(
+            subprocess.Popen(
                 [python_bin, '-m', 'webbrowser', '-t', url],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE)
