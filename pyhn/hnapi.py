@@ -33,10 +33,11 @@ or implied, of Scott Jackson.
 
 
 """
-import isit
 import re
+import isit
 import json
 
+from urlparse import urljoin
 from bs4 import BeautifulSoup
 
 if isit.py3:
@@ -261,7 +262,7 @@ class HackerNewsAPI:
             newsStories[i].id = storyIDs[i]
 
             if newsStories[i].id < 0:
-                idStart = newsStories[i].URL.find('item?id=') + 8
+                newsStories[i].URL.find('item?id=') + 8
                 newsStories[i].commentsURL = ''
                 newsStories[i].submitter = -1
                 newsStories[i].submitterURL = -1
@@ -275,31 +276,53 @@ class HackerNewsAPI:
     # but I thought it would be simplest if I kept the methods
     # separate.
 
-    def getTopStories(self):
+    def getTopStories(self, extra_page=1):
         """
         Gets the top stories from Hacker News.
         """
-        sourceNew1 = self.getSource("http://news.ycombinator.com/news")
-        sourceNew2 = self.getSource("http://news.ycombinator.com/news2")
-        storiesNew1 = self.getStories(sourceNew1)
-        storiesNew2 = self.getStories(sourceNew2)
-        stories = storiesNew1 + storiesNew2
+        stories = []
+
+        source_new1 = self.getSource("http://news.ycombinator.com/news")
+        source_new2 = self.getSource("http://news.ycombinator.com/news2")
+        source_latest = source_new2
+
+        stories += self.getStories(source_new1)
+        stories += self.getStories(source_new2)
+
+        for i in range(extra_page):
+            source_latest = self.getSource(self.getMoreLink(source_latest))
+            stories += self.getStories(source_latest)
+
         return stories
 
-    def getNewestStories(self):
+    def getNewestStories(self, extra_page=1):
         """
         Gets the newest stories from Hacker News.
         """
-        source = self.getSource("http://news.ycombinator.com/newest")
-        stories = self.getStories(source)
+        stories = []
+
+        source_latest = self.getSource("http://news.ycombinator.com/newest")
+        stories += self.getStories(source_latest)
+
+        for i in range(extra_page):
+            source_latest = self.getSource(self.getMoreLink(source_latest))
+            stories += self.getStories(source_latest)
+
         return stories
 
-    def getBestStories(self):
+    def getBestStories(self, extra_page=1):
         """
         Gets the "best" stories from Hacker News.
         """
-        source = self.getSource("http://news.ycombinator.com/best")
-        stories = self.getStories(source)
+        stories = []
+
+        source_latest = self.getSource("http://news.ycombinator.com/best")
+        stories += self.getStories(source_latest)
+
+        for i in range(extra_page):
+            source_latest = self.getSource(self.getMoreLink(source_latest))
+            stories += self.getStories(source_latest)
+
         return stories
 
     def getPageStories(self, pageId):
@@ -309,6 +332,13 @@ class HackerNewsAPI:
         source = self.getSource("http://news.ycombinator.com/x?fnid=%s" % pageId)
         stories = self.getStories(source)
         return stories
+
+    def getMoreLink(self, source):
+        soup = BeautifulSoup(source)
+        more_a = soup.findAll("a", {"rel": "nofollow"}, text="More")
+        if more_a:
+            return urljoin('http://news.ycombinator.com/', more_a[0]['href'])
+        return None
 
 
 class HackerNewsStory:
@@ -336,7 +366,7 @@ class HackerNewsStory:
 
             source = f.read()
             f.close()
-            self.comments =  json.loads(source.decode('utf-8'))['items']
+            self.comments = json.loads(source.decode('utf-8'))['items']
             return self.comments
         except URLError:
             raise HNException("Error getting source from " + url + ". Your internet connection may have something funny going on, or you could be behind a proxy.")
