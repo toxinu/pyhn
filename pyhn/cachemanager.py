@@ -16,6 +16,7 @@ class CacheManager(object):
             self.cache_path = self.config.parser.get('settings', 'cache')
 
         self.cache_age = int(self.config.parser.get('settings', 'cache_age'))
+        self.extra_page = int(self.config.parser.get('settings', 'extra_page'))
         self.api = HackerNewsAPI()
 
         if not os.path.exists(self.cache_path):
@@ -40,11 +41,11 @@ class CacheManager(object):
 
     def refresh(self, which="top"):
         if which == "top":
-            stories = self.api.getTopStories()
+            stories = self.api.getTopStories(extra_page=self.extra_page)
         elif which == "newest":
-            stories = self.api.getNewestStories()
+            stories = self.api.getNewestStories(extra_page=self.extra_page)
         elif which == "best":
-            stories = self.api.getBestStories()
+            stories = self.api.getBestStories(extra_page=self.extra_page)
         else:
             raise Exception('Bad value: top, newest and best stories')
 
