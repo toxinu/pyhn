@@ -62,10 +62,19 @@ class Config(object):
             self.parser.set('keybindings', 'open_submitter_link', 'U')
         if not self.parser.has_option('keybindings', 'reload_config'):
             self.parser.set('keybindings', 'reload_config', 'ctrl R')
+        if not self.parser.has_option('keybindings', 'newest_stories'):
+            self.parser.set('keybindings', 'newest_stories', 'n')
+        if not self.parser.has_option('keybindings', 'top_stories'):
+            self.parser.set('keybindings', 'top_stories', 't')
+        if not self.parser.has_option('keybindings', 'best_stories'):
+            self.parser.set('keybindings', 'best_stories', 'b')
 
         # Paths
         if not self.parser.has_section('settings'):
             self.parser.add_section('settings')
+
+        if not self.parser.has_option('settings', 'extra_page'):
+            self.parser.set('settings', 'extra_page', '1')
 
         if not self.parser.has_option('settings', 'cache'):
             self.parser.set(
