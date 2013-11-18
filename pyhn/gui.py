@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
 import sys
+import isit
 import urwid
 import subprocess
 import threading
 
-from urlparse import urlparse
+if isit.py3:
+    from urllib.parse import urlparse
+else:
+    from urlparse import urlparse
 
 from pyhn.config import Config
 from pyhn.popup import Popup
