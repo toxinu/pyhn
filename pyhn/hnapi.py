@@ -37,16 +37,17 @@ import re
 import isit
 import json
 
-from urlparse import urljoin
 from bs4 import BeautifulSoup
 
 if isit.py3:
     import urllib.request
     import urllib.parse
     from urllib.error import URLError
+    from urllib.parse import urljoin
 else:
     import urllib2
     from urllib2 import URLError
+    from urlparse import urljoin
 
 
 class HNException(Exception):
