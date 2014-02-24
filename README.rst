@@ -3,7 +3,7 @@ Pyhn
 
 Hacker news in your terminal.
 
-.. image:: https://dl.dropbox.com/s/swxcq2uk797309c/Screenshot%20at%202013-01-05%2018%3A38%3A59.png
+.. image:: https://raw.github.com/socketubs/pyhn/master/screenshot.png
 
 Don't be worry about your IP. Pyhn is not aggresive, it uses cache.
 
@@ -53,12 +53,12 @@ This is an example file: ::
   last_story = G
   refresh = r,R
   reload_config = ctrl r,ctrl R
-  
+
   [settings]
   cache = /home/socketubs/.pyhn/cache
   cache_age = 5
   browser_cmd = __default__
-  	
+
   [colors]
   body = default||standout
   focus = black|light green|underline
@@ -77,8 +77,8 @@ Settings
 Examples: ::
 
   browser_cmd = lynx __url__
-  browser_cmd = __default__ 
-  browser_cmd = w3m __url__ 
+  browser_cmd = __default__
+  browser_cmd = w3m __url__
   browser_cmd = echo "[INFO] Open with w3m: __url__" >> /tmp/pyhn.log && w3m __url__
 
 Key bindings
