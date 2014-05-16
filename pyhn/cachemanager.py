@@ -3,8 +3,8 @@ import os
 import pickle
 import datetime
 
-from pyhn.hnapi import HackerNewsAPI
 from pyhn.config import Config
+from pyhn.hnapi import HackerNewsAPI
 
 
 class CacheManager(object):
