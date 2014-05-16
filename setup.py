@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 # coding: utf-8
-
 import os
-import sys
 import re
+import sys
 
 try:
     from setuptools import setup
@@ -12,7 +11,7 @@ except ImportError:
 
 
 def get_version():
-    VERSIONFILE = 'pyhn/__init__.py'
+    VERSIONFILE = os.path.join('pyhn', '__init__.py')
     initfile_lines = open(VERSIONFILE, 'rt').readlines()
     VSRE = r"^__version__ = ['\"]([^'\"]*)['\"]"
     for line in initfile_lines:
