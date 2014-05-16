@@ -174,7 +174,10 @@ class HackerNewsAPI:
             return -1
         else:
             commentCountString = commentCountString.split(' ')[0]
-            return int(commentCountString)
+            try:
+                return int(commentCountString)
+            except ValueError:
+                return -1
 
     def getPublishedTime(self, source):
         """
