@@ -7,29 +7,30 @@ hn-api is released under the Simplified BSD License:
 Copyright (c) 2010, Scott Jackson
 All rights reserved.
 
-Redistribution and use in source and binary forms, with or without modification, are
-permitted provided that the following conditions are met:
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
 
-   1. Redistributions of source code must retain the above copyright notice, this list of
-      conditions and the following disclaimer.
+   1. Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
 
-   2. Redistributions in binary form must reproduce the above copyright notice, this list
-      of conditions and the following disclaimer in the documentation and/or other materials
-      provided with the distribution.
+   2. Redistributions in binary form must reproduce the above copyright notice,
+      this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
 
 THIS SOFTWARE IS PROVIDED BY SCOTT JACKSON ``AS IS'' AND ANY EXPRESS OR IMPLIED
-WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
-FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SCOTT JACKSON OR
-CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
-ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
-ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+IN NO EVENT SHALL SCOTT JACKSON OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-The views and conclusions contained in the software and documentation are those of the
-authors and should not be interpreted as representing official policies, either expressed
-or implied, of Scott Jackson.
+The views and conclusions contained in the software and documentation are
+those of the authors and should not be interpreted as representing official
+policies, either expressed or implied, of Scott Jackson.
 
 
 """
@@ -43,11 +44,9 @@ if isit.py3:
     import urllib.request
     import urllib.parse
     from urllib.error import URLError
-    from urllib.parse import urljoin
 else:
     import urllib2
     from urllib2 import URLError
-    from urlparse import urljoin
 
 
 class HNException(Exception):
@@ -62,7 +61,8 @@ class HNException(Exception):
 
 class HackerNewsAPI:
     """
-    The class for slicing and dicing the HTML and turning it into HackerNewsStory objects.
+    The class for slicing and dicing the HTML and turning
+    it into HackerNewsStory objects.
     """
     numberOfStoriesOnFrontPage = 0
 
@@ -71,7 +71,9 @@ class HackerNewsAPI:
         Returns the HTML source code for a URL.
         """
         headers = {
-            'User-Agent': 'Pyhn (Hacker news command line client) - https://github.com/socketubs/pyhn'}
+            'User-Agent': """
+                Pyhn (Hacker news command line client) -
+                https://github.com/socketubs/pyhn"""}
         try:
             if isit.py3:
                 r = urllib.request.Request(url, b'', headers)
@@ -85,7 +87,10 @@ class HackerNewsAPI:
             return source.decode('utf-8')
         except URLError:
             raise
-            raise HNException("Error getting source from " + url + ". Your internet connection may have something funny going on, or you could be behind a proxy.")
+            raise HNException(
+                "Error getting source from " + url +
+                ". Your internet connection may have something "
+                "funny going on, or you could be behind a proxy.")
 
     def getStoryNumber(self, source):
         """
@@ -109,11 +114,13 @@ class HackerNewsAPI:
         # Change "&amp;" to "&"
         url = url.replace("&amp;", "&")
 
-        # Remove 'rel="nofollow' from the end of links, since they were causing some bugs.
+        # Remove 'rel="nofollow' from the end of links,
+        # since they were causing some bugs.
         if url[len(url) - 13:] == "rel=\"nofollow":
             url = url[:len(url) - 13]
 
-        # Weird hack for URLs that end in '" '. Consider removing later if it causes any problems.
+        # Weird hack for URLs that end in '" '.
+        # Consider removing later if it causes any problems.
         if url[len(url) - 2:] == "\" ":
             url = url[:len(url) - 2]
         return url
@@ -202,7 +209,8 @@ class HackerNewsAPI:
         """
         Gets the comment URL of a story.
         """
-        return "https://news.ycombinator.com/item?id=" + str(self.getHNID(source))
+        return "https://news.ycombinator.com/item?id=" + str(
+            self.getHNID(source))
 
     def getStories(self, source):
         """
@@ -227,7 +235,8 @@ class HackerNewsAPI:
         # Get story numbers.
         storyNumbers = []
         for i in range(0, len(story_details) - 1, 2):
-            story = str(story_details[i])  # otherwise, story_details[i] is a BeautifulSoup-defined object.
+            # Otherwise, story_details[i] is a BeautifulSoup-defined object.
+            story = str(story_details[i])
             storyNumber = self.getStoryNumber(story)
             storyNumbers.append(storyNumber)
 
@@ -241,7 +250,8 @@ class HackerNewsAPI:
         storyPublishedTime = []
         storyIDs = []
 
-        for i in range(1, len(story_details), 2):  # Every second cell contains a story.
+        # Every second cell contains a story.
+        for i in range(1, len(story_details), 2):
             story = str(story_details[i])
             storyURLs.append(self.getStoryURL(story))
             storyDomains.append(self.getStoryDomain(story))
@@ -264,7 +274,8 @@ class HackerNewsAPI:
             newsStories[i].title = storyTitles[i]
             newsStories[i].score = storyScores[i]
             newsStories[i].submitter = storySubmitters[i]
-            newsStories[i].submitterURL = "https://news.ycombinator.com/user?id=" + storySubmitters[i]
+            newsStories[i].submitterURL = \
+                "https://news.ycombinator.com/user?id=" + storySubmitters[i]
             newsStories[i].commentCount = storyCommentCounts[i]
             newsStories[i].commentsURL = storyCommentURLs[i]
             newsStories[i].publishedTime = storyPublishedTime[i]
@@ -291,15 +302,13 @@ class HackerNewsAPI:
         """
         stories = []
 
-        source_new1 = self.getSource("https://news.ycombinator.com/news")
-        source_new2 = self.getSource("https://news.ycombinator.com/news2")
-        source_latest = source_new2
+        source_latest = self.getSource("https://news.ycombinator.com/news")
 
-        stories += self.getStories(source_new1)
-        stories += self.getStories(source_new2)
+        stories += self.getStories(source_latest)
 
-        for i in range(extra_page):
-            source_latest = self.getSource(self.getMoreLink(source_latest))
+        for i in range(2, extra_page + 2):
+            source_latest = self.getSource(
+                "https://news.ycombinator.com/news?p=%s" % i)
             stories += self.getStories(source_latest)
 
         return stories
@@ -313,8 +322,9 @@ class HackerNewsAPI:
         source_latest = self.getSource("https://news.ycombinator.com/newest")
         stories += self.getStories(source_latest)
 
-        for i in range(extra_page):
-            source_latest = self.getSource(self.getMoreLink(source_latest))
+        for i in range(2, extra_page + 2):
+            source_latest = self.getSource(
+                "https://news.ycombinator.com/newest?p=%s" % i)
             stories += self.getStories(source_latest)
 
         return stories
@@ -328,8 +338,9 @@ class HackerNewsAPI:
         source_latest = self.getSource("https://news.ycombinator.com/best")
         stories += self.getStories(source_latest)
 
-        for i in range(extra_page):
-            source_latest = self.getSource(self.getMoreLink(source_latest))
+        for i in range(2, extra_page + 2):
+            source_latest = self.getSource(
+                "https://news.ycombinator.com/best?p=%s" % i)
             stories += self.getStories(source_latest)
 
         return stories
@@ -338,16 +349,10 @@ class HackerNewsAPI:
         """
         Gets the pageId stories from Hacker News.
         """
-        source = self.getSource("https://news.ycombinator.com/x?fnid=%s" % pageId)
+        source = self.getSource(
+            "https://news.ycombinator.com/x?fnid=%s" % pageId)
         stories = self.getStories(source)
         return stories
-
-    def getMoreLink(self, source):
-        soup = BeautifulSoup(source)
-        more_a = soup.findAll("a", {"rel": "nofollow"}, text="More")
-        if more_a:
-            return urljoin('https://news.ycombinator.com/', more_a[0]['href'])
-        return None
 
 
 class HackerNewsStory:
@@ -366,7 +371,9 @@ class HackerNewsStory:
     publishedTime = ""   # The time sinc story was published
 
     def getComments(self):
-        url = 'http://hndroidapi.appspot.com/nestedcomments/format/json/id/%s' % self.id
+        url = (
+            'http://hndroidapi.appspot.com/'
+            'nestedcomments/format/json/id/%s' % self.id)
         try:
             if isit.py3:
                 f = urllib.request.urlopen(url)
@@ -378,7 +385,10 @@ class HackerNewsStory:
             self.comments = json.loads(source.decode('utf-8'))['items']
             return self.comments
         except URLError:
-            raise HNException("Error getting source from " + url + ". Your internet connection may have something funny going on, or you could be behind a proxy.")
+            raise HNException(
+                "Error getting source from " + url +
+                ". Your internet connection may have something funny "
+                "going on, or you could be behind a proxy.")
 
     def printDetails(self):
         """
@@ -400,9 +410,10 @@ class HackerNewsUser:
     """
     A class representing a user on Hacker News.
     """
-    karma = -10000  # Default value. I don't think anyone really has -10000 karma.
-    name = ""       # The user's HN username.
-    userPageURL = ""     # The URL of the user's 'user' page.
+    # Default value. I don't think anyone really has -10000 karma.
+    karma = -10000
+    name = ""  # The user's HN username.
+    userPageURL = ""  # The URL of the user's 'user' page.
     threadsPageURL = ""  # The URL of the user's 'threads' page.
 
     def __init__(self, username):
@@ -411,7 +422,8 @@ class HackerNewsUser:
         """
         self.name = username
         self.userPageURL = "https://news.ycombinator.com/user?id=" + self.name
-        self.threadsPageURL = "https://news.ycombinator.com/threads?id=" + self.name
+        self.threadsPageURL = (
+            "https://news.ycombinator.com/threads?id=%s" % self.name)
         self.refreshKarma()
 
     def refreshKarma(self):
