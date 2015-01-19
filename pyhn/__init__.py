@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __title__ = 'pyhn'
-__version__ = '0.2.6'
+__version__ = '0.2.7'
 __author__ = 'Geoffrey Lehée'
 __license__ = 'AGPL3'
 __copyright__ = 'Copyright 2014 Geoffrey Lehée'
