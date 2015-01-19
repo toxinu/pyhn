@@ -44,9 +44,13 @@ if isit.py3:
     import urllib.request
     import urllib.parse
     from urllib.error import URLError
+    from urllib.parse import urljoin
+    from urllib.parse import urlparse
 else:
     import urllib2
     from urllib2 import URLError
+    from urlparse import urljoin
+    from urlparse import urlparse
 
 
 class HNException(Exception):
@@ -96,9 +100,10 @@ class HackerNewsAPI:
         """
         Parses HTML and returns the number of a story.
         """
-        numberStart = source.find('>') + 1
-        numberEnd = source.find('.')
-        return int(source[numberStart:numberEnd])
+        bs = BeautifulSoup(source)
+        span = bs.find('span', attrs={'class': 'rank'})
+        number = span.string.replace('.', '')
+        return int(number)
 
     def getStoryURL(self, source):
         """
@@ -129,22 +134,20 @@ class HackerNewsAPI:
         """
         Gets the domain of a story.
         """
-        domainStart = source.find('comhead">') + 10
-        domainEnd = source.find('</span>')
-        domain = source[domainStart:domainEnd]
-        # Check for "Ask HN" links.
-        if domain[0] == '=':
-            return "https://news.ycombinator.com"
-        return "https://" + domain[1:len(domain) - 2]
+        bs = BeautifulSoup(source)
+        url = bs.find('a').get('href')
+        url_parsed = urlparse(url)
+        if url_parsed.netloc:
+            return url
+        return urljoin('https://news.ycombinator.com', url)
 
     def getStoryTitle(self, source):
         """
         Gets the title of a story.
         """
-        titleStart = source.find('>', source.find('>') + 1) + 1
-        titleEnd = source.find('</a>')
-        title = source[titleStart:titleEnd]
-        title = title.lstrip()  # Strip trailing whitespace characters.
+        bs = BeautifulSoup(source)
+        title = bs.find('td', attrs={'class': 'title'}).text
+        title = title.strip()
         return title
 
     def getStoryScore(self, source):
@@ -217,7 +220,7 @@ class HackerNewsAPI:
         Looks at source, makes stories from it, returns the stories.
         """
         """ <td align=right valign=top class="title">31.</td> """
-        #self.numberOfStoriesOnFrontPage = source.count("span id=score")
+        # self.numberOfStoriesOnFrontPage = source.count("span id=score")
         self.numberOfStoriesOnFrontPage = 30
 
         # Create the empty stories.
@@ -289,7 +292,7 @@ class HackerNewsAPI:
 
         return newsStories
 
-    ##### End of internal methods. #####
+    # #### End of internal methods. #####
 
     # The following methods could be turned into one method with
     # an argument that switches which page to get stories from,
