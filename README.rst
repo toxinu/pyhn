@@ -105,7 +105,7 @@ Colors options are designed like that: ``foreground|background|monochrome``.
 
 * *settings* : ‘bold’, ‘underline’, ‘blink’, ‘standout’
 
-For more informations you can take a loot at ``urwid`` `manual`_.
+For more informations you can take a look at ``urwid`` `manual`_.
 
 License
 -------
