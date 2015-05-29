@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 import sys
-import isit
 import urwid
 import subprocess
 import threading
 
-if isit.py3:
+PY3 = False
+if sys.version_info.major == 3:
+    PY3 = True
+
+if PY3:
     from urllib.parse import urlparse
 else:
     from urlparse import urlparse
@@ -46,7 +49,8 @@ class ItemWidget(urwid.WidgetWrap):
                 urwid.Text("%s:" % self.number, align="right"),
                 'body',
                 'focus'))),
-            urwid.AttrWrap(urwid.Text('%s (%s)' % (self.title, self.domain)), 'body', 'focus'),
+            urwid.AttrWrap(
+                urwid.Text('%s (%s)' % (self.title, self.domain)), 'body', 'focus'),
             ('fixed', 5, urwid.Padding(urwid.AttrWrap(
                 urwid.Text(str(self.score), align="right"), 'body', 'focus'))),
             ('fixed', 8, urwid.Padding(urwid.AttrWrap(
@@ -284,7 +288,6 @@ class HNGui(object):
             self.listbox = urwid.ListBox(self.walker)
 
     def show_comments(self, story):
-        #items = []
         pass
 
     def open_webbrowser(self, url):
