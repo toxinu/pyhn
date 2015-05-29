@@ -61,7 +61,7 @@ This is an example file: ::
 
   [colors]
   body = default||standout
-  focus = black|light green|underline
+  focus = black||underline
   footer = black|light gray
   footer-error = dark red,bold|light gray
   header = dark gray,bold|white|
@@ -110,10 +110,10 @@ For more informations you can take a look at ``urwid`` `manual`_.
 License
 -------
 
-License is `AGPL3`_. See `LICENSE`_.
+License is `MIT`_. See `LICENSE`_.
 
 .. _AUR: https://aur.archlinux.org/packages/pyhn/
 .. _input: http://excess.org/urwid/docs/manual/userinput.html#keyboard-input
 .. _manual: http://excess.org/urwid/docs/manual/displayattributes.html#foreground-and-background-settings
-.. _AGPL3: http://www.gnu.org/licenses/agpl.html
+.. _MIT: http://opensource.org/licenses/MIT
 .. _LICENSE: https://raw.github.com/socketubs/pyhn/master/LICENSE
