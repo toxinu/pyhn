@@ -35,12 +35,16 @@ policies, either expressed or implied, of Scott Jackson.
 
 """
 import re
-import isit
+import sys
 import json
 
 from bs4 import BeautifulSoup
 
-if isit.py3:
+PY3 = False
+if sys.version_info.major == 3:
+    PY3 = True
+
+if PY3:
     import urllib.request
     import urllib.parse
     from urllib.error import URLError
@@ -79,7 +83,7 @@ class HackerNewsAPI:
                 Pyhn (Hacker news command line client) -
                 https://github.com/socketubs/pyhn"""}
         try:
-            if isit.py3:
+            if PY3:
                 r = urllib.request.Request(url, b'', headers)
                 f = urllib.request.urlopen(r)
             else:
@@ -378,7 +382,7 @@ class HackerNewsStory:
             'http://hndroidapi.appspot.com/'
             'nestedcomments/format/json/id/%s' % self.id)
         try:
-            if isit.py3:
+            if PY3:
                 f = urllib.request.urlopen(url)
             else:
                 f = urllib2.urlopen(url)
