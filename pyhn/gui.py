@@ -50,7 +50,7 @@ class ItemWidget(urwid.WidgetWrap):
                 'body',
                 'focus'))),
             urwid.AttrWrap(
-                urwid.Text('%s (%s)' % (self.title, self.domain)), 'body', 'focus'),
+                urwid.Text(self.title), 'body', 'focus'),
             ('fixed', 5, urwid.Padding(urwid.AttrWrap(
                 urwid.Text(str(self.score), align="right"), 'body', 'focus'))),
             ('fixed', 8, urwid.Padding(urwid.AttrWrap(
