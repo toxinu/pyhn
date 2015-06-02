@@ -3,6 +3,7 @@
 from pyhn import gui
 from pyhn.cachemanager import CacheManager
 
+print('Loading stories...')
 cachemanager = CacheManager()
 hn_gui = gui.HNGui(cachemanager)
 hn_gui.main()
