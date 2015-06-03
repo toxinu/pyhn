@@ -9,6 +9,21 @@ try:
 except ImportError:
     from distutils.core import setup
 
+packages = [
+    'pyhn',
+    'pyhn.lib.requests',
+    'pyhn.lib.requests.packages',
+    'pyhn.lib.requests.packages.chardet',
+    'pyhn.lib.requests.packages.urllib3',
+    'pyhn.lib.requests.packages.urllib3.packages',
+    'pyhn.lib.requests.packages.urllib3.contrib',
+    'pyhn.lib.requests.packages.urllib3.util',
+    'pyhn.lib.requests.packages.urllib3.packages.ssl_match_hostname',
+    'pyhn.lib.bs4_py2',
+    'pyhn.lib.bs4_py2.builder',
+    'pyhn.lib.bs4_py3',
+    'pyhn.lib.bs4_py3.builder']
+
 
 def get_version():
     VERSIONFILE = os.path.join('pyhn', '__init__.py')
@@ -33,10 +48,13 @@ setup(
     author="Geoffrey Lehée",
     author_email="hello@socketubs.org",
     url='https://github.com/socketubs/pyhn/',
-    keywords="python hackernews hn",
-    packages=['pyhn'],
+    keywords="python hackernews hn terminal commandline",
+    packages=packages,
     scripts=['scripts/pyhn'],
     install_requires=['urwid'],
+    package_data={'': ['LICENSE'], 'pyhn.lib.requests': ['*.pem']},
+    package_dir={'pyhn': 'pyhn'},
+    include_package_data=True,
     classifiers=[
         'Intended Audience :: Developers',
         'Natural Language :: English',
