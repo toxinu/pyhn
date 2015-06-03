@@ -96,6 +96,9 @@ class Config(object):
         if not self.parser.has_option('settings', 'browser_cmd'):
             self.parser.set('settings', 'browser_cmd', '__default__')
 
+        if not self.parser.has_option('settings', 'refresh_interval'):
+            self.parser.set('settings', 'refresh_interval', '5')
+
         # Colors
         if not self.parser.has_section('colors'):
             self.parser.add_section('colors')
