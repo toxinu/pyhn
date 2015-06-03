@@ -46,8 +46,17 @@ class CacheManager(object):
             stories = self.api.getNewestStories(extra_page=self.extra_page)
         elif which == "best":
             stories = self.api.getBestStories(extra_page=self.extra_page)
+        elif which == "show":
+            stories = self.api.getShowStories(extra_page=self.extra_page)
+        elif which == "show_newest":
+            stories = self.api.getShowNewestStories(extra_page=self.extra_page)
+        elif which == "ask":
+            stories = self.api.getAskStories(extra_page=self.extra_page)
+        elif which == "jobs":
+            stories = self.api.getJobsStories(extra_page=self.extra_page)
         else:
-            raise Exception('Bad value: top, newest and best stories')
+            raise Exception(
+                'Bad value: top, newest, ask, jobs, show, shownewest and best stories')
 
         cache = {}
         if os.path.exists(self.cache_path):
