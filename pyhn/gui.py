@@ -44,13 +44,17 @@ class ItemWidget(urwid.WidgetWrap):
             self.comment_count = "-"
             self.comments_url = -1
 
+        title = self.title
+        try:
+            title = title.encode('latin')
+        except:
+            pass
+
         self.item = [
             ('fixed', 4, urwid.Padding(urwid.AttrWrap(
-                urwid.Text("%s:" % self.number, align="right"),
-                'body',
-                'focus'))),
+                urwid.Text("%s:" % self.number, align="right"), 'body', 'focus'))),
             urwid.AttrWrap(
-                urwid.Text(self.title), 'body', 'focus'),
+                urwid.Text(title), 'body', 'focus'),
             ('fixed', 5, urwid.Padding(urwid.AttrWrap(
                 urwid.Text(str(self.score), align="right"), 'body', 'focus'))),
             ('fixed', 8, urwid.Padding(urwid.AttrWrap(
@@ -101,12 +105,15 @@ class HNGui(object):
                 urwid.Text(' %s: %s ' % (binding[1], binding[0].replace('_', ' '))),
                 'help')
             self.help_msg.append(line)
+        self.help_msg.append(urwid.AttrWrap(
+            urwid.Text(' ctrl mouse-left: open story link'), 'help'))
         self.help_msg.append(urwid.AttrWrap(urwid.Text(''), 'help'))
         self.help_msg.append(urwid.AttrWrap(
             urwid.Text(' Thanks for using Pyhn %s! ' % VERSION, align='center'),
             'title'))
         self.help_msg.append(urwid.AttrWrap(urwid.Text(''), 'help'))
-        self.help_msg.append(urwid.AttrWrap(urwid.Text(' Author : socketubs '), 'help'))
+        self.help_msg.append(
+            urwid.AttrWrap(urwid.Text(' Author : socketubs (Geoffrey Lehée)'), 'help'))
         self.help_msg.append(urwid.AttrWrap(
             urwid.Text(' Code   : https://github.com/socketubs/pyhn '),
             'help'))
@@ -148,7 +155,7 @@ class HNGui(object):
             self.view,
             self.palette,
             screen=self.ui,
-            handle_mouse=False,
+            handle_mouse=True,
             unhandled_input=self.keystroke)
 
         self.build_help()
@@ -228,6 +235,7 @@ class HNGui(object):
             self.listbox.set_focus(self.walker.positions()[-1])
         # STORIES
         if input in self.bindings['newest_stories'].split(','):
+            self.set_footer('Syncing newest stories...')
             threading.Thread(
                 None,
                 self.async_refresher,
@@ -235,16 +243,33 @@ class HNGui(object):
                 ('newest', 'NEWEST STORIES'),
                 {}).start()
         if input in self.bindings['top_stories'].split(','):
+            self.set_footer('Syncing top stories...')
             threading.Thread(
-                None,
-                self.async_refresher,
-                None,
-                ('top', 'TOP STORIES'),
-                {}).start()
+                None, self.async_refresher, None, ('top', 'TOP STORIES'), {}).start()
         if input in self.bindings['best_stories'].split(','):
             self.set_footer('Syncing best stories...')
             threading.Thread(
                 None, self.async_refresher, None, ('best', 'BEST STORIES'), {}).start()
+        if input in self.bindings['show_stories'].split(','):
+            self.set_footer('Syncing show stories...')
+            threading.Thread(
+                None, self.async_refresher, None, ('show', 'SHOW STORIES'), {}).start()
+        if input in self.bindings['show_newest_stories'].split(','):
+            self.set_footer('Syncing show newest stories...')
+            threading.Thread(
+                None,
+                self.async_refresher,
+                None,
+                ('show_newest', 'SHOW NEWEST STORIES'),
+                {}).start()
+        if input in self.bindings['ask_stories'].split(','):
+            self.set_footer('Syncing ask stories...')
+            threading.Thread(
+                None, self.async_refresher, None, ('ask', 'ASK STORIES'), {}).start()
+        if input in self.bindings['jobs_stories'].split(','):
+            self.set_footer('Syncing jobs stories...')
+            threading.Thread(
+                None, self.async_refresher, None, ('jobs', 'JOBS STORIES'), {}).start()
         # OTHERS
         if input in self.bindings['refresh'].split(','):
             self.set_footer('Refreshing new stories...')
@@ -261,6 +286,9 @@ class HNGui(object):
                     keys = self.ui.get_input()
                     if 'h' or 'H' or '?' or 'escape' in keys:
                         break
+        # MOUSE
+        if len(input) > 1 and input[0] == 'ctrl mouse release':
+            self.open_webbrowser(self.listbox.get_focus()[0].url)
 
     def async_refresher(self, which=None, header=None):
         if which is None:
@@ -277,8 +305,14 @@ class HNGui(object):
     def update_stories(self, stories):
         """ Reload listbox and walker with new stories """
         items = []
+        item_ids = []
         for story in stories:
-            items.append(ItemWidget(story))
+            if story.id != -1 and story.id in item_ids:
+                story.title = "- %s" % story.title
+                items.append(ItemWidget(story))
+            else:
+                items.append(ItemWidget(story))
+            item_ids.append(story.id)
 
         if self.already_build:
             self.walker[:] = items
@@ -350,3 +384,4 @@ class HNGui(object):
             self.loop.run()
         except KeyboardInterrupt:
             urwid.ExitMainLoop()
+        print('Exiting... Bye!')
