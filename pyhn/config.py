@@ -48,6 +48,7 @@ class Config(object):
             self.parser.set('keybindings', 'down', 'k')
         if not self.parser.has_option('keybindings', 'refresh'):
             self.parser.set('keybindings', 'refresh', 'r')
+
         if not self.parser.has_option('keybindings', 'show_comments_link'):
             self.parser.set('keybindings', 'show_comments_link', 'c')
         if not self.parser.has_option('keybindings', 'open_comments_link'):
@@ -60,15 +61,24 @@ class Config(object):
             self.parser.set('keybindings', 'show_submitter_link', 'u')
         if not self.parser.has_option('keybindings', 'open_submitter_link'):
             self.parser.set('keybindings', 'open_submitter_link', 'U')
+
         if not self.parser.has_option('keybindings', 'reload_config'):
             self.parser.set('keybindings', 'reload_config', 'ctrl R')
+
         if not self.parser.has_option('keybindings', 'newest_stories'):
             self.parser.set('keybindings', 'newest_stories', 'n')
         if not self.parser.has_option('keybindings', 'top_stories'):
             self.parser.set('keybindings', 'top_stories', 't')
         if not self.parser.has_option('keybindings', 'best_stories'):
             self.parser.set('keybindings', 'best_stories', 'b')
-
+        if not self.parser.has_option('keybindings', 'show_stories'):
+            self.parser.set('keybindings', 'show_stories', 'd')
+        if not self.parser.has_option('keybindings', 'show_newest_stories'):
+            self.parser.set('keybindings', 'show_newest_stories', 'D')
+        if not self.parser.has_option('keybindings', 'ask_stories'):
+            self.parser.set('keybindings', 'ask_stories', 'a')
+        if not self.parser.has_option('keybindings', 'jobs_stories'):
+            self.parser.set('keybindings', 'jobs_stories', 'J')
         # Paths
         if not self.parser.has_section('settings'):
             self.parser.add_section('settings')
