@@ -1,1 +1,1 @@
-include LICENSE README.rst pyhn/lib/requests/cacert.pem
+include LICENSE README.rst NOTICE pyhn/lib/requests/cacert.pem
