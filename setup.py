@@ -17,6 +17,7 @@ if sys.argv[-1] == 'publish':
 
 packages = [
     'pyhn',
+    'pyhn.lib',
     'pyhn.lib.requests',
     'pyhn.lib.requests.packages',
     'pyhn.lib.requests.packages.chardet',
