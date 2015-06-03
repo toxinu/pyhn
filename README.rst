@@ -7,6 +7,21 @@ Hacker news in your terminal.
 
 Don't be worry about your IP. Pyhn is not aggresive, it uses cache.
 
+* ``Cache manager``
+* ``Customize all the colors``
+* ``Customize all the keybinds``
+* ``Default vim-like keybindings``
+* ``Compatible with Top, Ask, Show and Job stories``
+* ``Auto refresh support``
+* ``Play nice with tmux and screen (over ssh too!)``
+* ``Open storiers in your commandline web browser``
+* ``Mouse support``
+* ``Easily installable``
+* ``Easily hackable``
+* ``Ultra fast``
+* ``Python 2 and 3``
+* ``MIT license``
+
 Installation
 ------------
 
@@ -54,19 +69,30 @@ This is an example file: ::
   refresh = r,R
   reload_config = ctrl r,ctrl R
 
+  newest_stories = n
+  top_stories = t
+  best_stories = b
+  show_stories = d
+  show_newest_stories = D
+  ask_stories = a
+  jobs_stories = J
+
   [settings]
   cache = /home/socketubs/.pyhn/cache
   cache_age = 5
+  # Refresh interval in minutes (default: 5. minimum: 1)
+  refresh_interval = 5
   browser_cmd = __default__
 
   [colors]
-  body = default||standout
-  focus = black||underline
+  body = default|
+  focus = white,bold|dark cyan
   footer = black|light gray
   footer-error = dark red,bold|light gray
-  header = dark gray,bold|white|
+  header = black,bold|light gray
   title = dark red,bold|light gray
-  help = black,bold|light gray
+  help = black,standout|dark cyan
+
 
 Settings
 ~~~~~~~~
