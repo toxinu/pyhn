@@ -36,25 +36,26 @@ policies, either expressed or implied, of Scott Jackson.
 """
 import re
 import sys
-import json
 
-from bs4 import BeautifulSoup
+from pyhn.lib import requests
 
 PY3 = False
 if sys.version_info.major == 3:
     PY3 = True
 
 if PY3:
-    import urllib.request
-    import urllib.parse
-    from urllib.error import URLError
     from urllib.parse import urljoin
     from urllib.parse import urlparse
+    from pyhn.lib.bs4_py3 import BeautifulSoup
 else:
-    import urllib2
-    from urllib2 import URLError
     from urlparse import urljoin
     from urlparse import urlparse
+    from pyhn.lib.bs4_py2 import BeautifulSoup
+
+HEADERS = {
+    'User-Agent': (
+        "Pyhn (Hacker news command line client) - "
+        "https://github.com/socketubs/pyhn")}
 
 
 class HNException(Exception):
@@ -78,23 +79,11 @@ class HackerNewsAPI:
         """
         Returns the HTML source code for a URL.
         """
-        headers = {
-            'User-Agent': """
-                Pyhn (Hacker news command line client) -
-                https://github.com/socketubs/pyhn"""}
         try:
-            if PY3:
-                r = urllib.request.Request(url, b'', headers)
-                f = urllib.request.urlopen(r)
-            else:
-                r = urllib2.Request(url, '', headers)
-                f = urllib2.urlopen(r)
-
-            source = f.read()
-            f.close()
-            return source.decode('utf-8')
-        except URLError:
-            raise
+            r = requests.get(url, headers=HEADERS)
+            if r:
+                return r.text
+        except Exception:
             raise HNException(
                 "Error getting source from " + url +
                 ". Your internet connection may have something "
@@ -224,8 +213,7 @@ class HackerNewsAPI:
         Looks at source, makes stories from it, returns the stories.
         """
         """ <td align=right valign=top class="title">31.</td> """
-        # self.numberOfStoriesOnFrontPage = source.count("span id=score")
-        self.numberOfStoriesOnFrontPage = 30
+        self.numberOfStoriesOnFrontPage = source.count('span class="rank"')
 
         # Create the empty stories.
         newsStories = []
@@ -238,7 +226,6 @@ class HackerNewsAPI:
         story_details = soup.findAll("td", {"class": "title"})
         # Gives score, submitter, comment count and comment URL.
         story_other_details = soup.findAll("td", {"class": "subtext"})
-
         # Get story numbers.
         storyNumbers = []
         for i in range(0, len(story_details) - 1, 2):
@@ -296,6 +283,13 @@ class HackerNewsAPI:
 
         return newsStories
 
+    def getMoreLink(self, source):
+        soup = BeautifulSoup(source)
+        more_a = soup.findAll("a", {"rel": "nofollow"}, text="More")
+        if more_a:
+            return urljoin('https://news.ycombinator.com/', more_a[0]['href'])
+        return None
+
     # #### End of internal methods. #####
 
     # The following methods could be turned into one method with
@@ -303,21 +297,60 @@ class HackerNewsAPI:
     # but I thought it would be simplest if I kept the methods
     # separate.
 
+    def getJobsStories(self, extra_page=1):
+        stories = []
+        source_latest = self.getSource("https://news.ycombinator.com/jobs")
+        stories += self.getStories(source_latest)
+        for i in range(1, extra_page + 2):
+            get_more_link = self.getMoreLink(source_latest)
+            if not get_more_link:
+                break
+            source_latest = self.getSource(get_more_link)
+            stories += self.getStories(source_latest)
+
+        return stories
+
+    def getAskStories(self, extra_page=1):
+        stories = []
+        for i in range(1, extra_page + 2):
+            source = self.getSource(
+                "https://news.ycombinator.com/ask?p=%s" % i)
+            stories += self.getStories(source)
+        return stories
+
+    def getShowNewestStories(self, extra_page=1):
+        stories = []
+        source_latest = self.getSource("https://news.ycombinator.com/shownew")
+        stories += self.getStories(source_latest)
+        for i in range(1, extra_page + 2):
+            get_more_link = self.getMoreLink(source_latest)
+            if not get_more_link:
+                break
+            source_latest = self.getSource(get_more_link)
+            stories += self.getStories(source_latest)
+        return stories
+
+    def getShowStories(self, extra_page=1):
+        stories = []
+        source_latest = self.getSource("https://news.ycombinator.com/show")
+        stories += self.getStories(source_latest)
+        for i in range(1, extra_page + 2):
+            get_more_link = self.getMoreLink(source_latest)
+            if not get_more_link:
+                break
+            source_latest = self.getSource(get_more_link)
+            stories += self.getStories(source_latest)
+        return stories
+
     def getTopStories(self, extra_page=1):
         """
         Gets the top stories from Hacker News.
         """
         stories = []
-
-        source_latest = self.getSource("https://news.ycombinator.com/news")
-
-        stories += self.getStories(source_latest)
-
-        for i in range(2, extra_page + 2):
-            source_latest = self.getSource(
+        for i in range(1, extra_page + 2):
+            source = self.getSource(
                 "https://news.ycombinator.com/news?p=%s" % i)
-            stories += self.getStories(source_latest)
-
+            stories += self.getStories(source)
         return stories
 
     def getNewestStories(self, extra_page=1):
@@ -325,15 +358,14 @@ class HackerNewsAPI:
         Gets the newest stories from Hacker News.
         """
         stories = []
-
         source_latest = self.getSource("https://news.ycombinator.com/newest")
         stories += self.getStories(source_latest)
-
-        for i in range(2, extra_page + 2):
-            source_latest = self.getSource(
-                "https://news.ycombinator.com/newest?p=%s" % i)
+        for i in range(1, extra_page + 2):
+            get_more_link = self.getMoreLink(source_latest)
+            if not get_more_link:
+                break
+            source_latest = self.getSource(get_more_link)
             stories += self.getStories(source_latest)
-
         return stories
 
     def getBestStories(self, extra_page=1):
@@ -341,15 +373,10 @@ class HackerNewsAPI:
         Gets the "best" stories from Hacker News.
         """
         stories = []
-
-        source_latest = self.getSource("https://news.ycombinator.com/best")
-        stories += self.getStories(source_latest)
-
-        for i in range(2, extra_page + 2):
+        for i in range(1, extra_page + 2):
             source_latest = self.getSource(
                 "https://news.ycombinator.com/best?p=%s" % i)
             stories += self.getStories(source_latest)
-
         return stories
 
     def getPageStories(self, pageId):
@@ -382,16 +409,10 @@ class HackerNewsStory:
             'http://hndroidapi.appspot.com/'
             'nestedcomments/format/json/id/%s' % self.id)
         try:
-            if PY3:
-                f = urllib.request.urlopen(url)
-            else:
-                f = urllib2.urlopen(url)
-
-            source = f.read()
-            f.close()
-            self.comments = json.loads(source.decode('utf-8'))['items']
+            r = requests.get(url, headers=HEADERS)
+            self.comments = r.json()['items']
             return self.comments
-        except URLError:
+        except Exception:
             raise HNException(
                 "Error getting source from " + url +
                 ". Your internet connection may have something funny "
@@ -402,8 +423,8 @@ class HackerNewsStory:
         Prints details of the story.
         """
         print(str(self.number) + ": " + self.title)
-        print("URL: " + self.URL)
-        print("domain: " + self.domain)
+        print("URL: %s" % self.URL)
+        print("domain: %s" % self.domain)
         print("score: " + str(self.score) + " points")
         print("submitted by: " + self.submitter)
         print("sinc %s" + self.publishedTime)
