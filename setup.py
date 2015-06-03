@@ -32,7 +32,6 @@ packages = [
 
 requires = ['urwid==1.3.0']
 
-
 version = ''
 with open('pyhn/__init__.py', 'r') as fd:
     version = re.search(
