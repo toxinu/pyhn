@@ -13,8 +13,9 @@ if PY3:
 else:
     from urlparse import urlparse
 
-from pyhn.config import Config
 from pyhn.popup import Popup
+from pyhn.poller import Poller
+from pyhn.config import Config
 from pyhn import __version__ as VERSION
 
 
@@ -81,6 +82,8 @@ class HNGui(object):
         self.which = "top"
 
         self.config = Config()
+        self.poller = Poller(
+            self, delay=int(self.config.parser.get('settings', 'refresh_interval')))
         self.palette = self.config.get_palette()
 
     def main(self):
@@ -184,7 +187,7 @@ class HNGui(object):
         """ All key bindings are computed here """
         # QUIT
         if input in ('q', 'Q'):
-            raise urwid.ExitMainLoop()
+            self.exit(must_raise=True)
         # LINKS
         if input in self.bindings['open_comments_link'].split(','):
             if self.listbox.get_focus()[0].comments_url == -1:
@@ -273,7 +276,8 @@ class HNGui(object):
         # OTHERS
         if input in self.bindings['refresh'].split(','):
             self.set_footer('Refreshing new stories...')
-            threading.Thread(None, self.async_refresher, None, (), {}).start()
+            threading.Thread(
+                None, self.async_refresher, None, (), {'force': True}).start()
         if input in self.bindings['reload_config'].split(','):
             self.reload_config()
         if input in ('h', 'H', '?'):
@@ -290,10 +294,10 @@ class HNGui(object):
         if len(input) > 1 and input[0] == 'ctrl mouse release':
             self.open_webbrowser(self.listbox.get_focus()[0].url)
 
-    def async_refresher(self, which=None, header=None):
+    def async_refresher(self, which=None, header=None, force=False):
         if which is None:
             which = self.which
-        if self.cache_manager.is_outdated(which):
+        if self.cache_manager.is_outdated(which) or force:
             self.cache_manager.refresh(which)
         stories = self.cache_manager.get_stories(which)
         self.update_stories(stories)
@@ -376,12 +380,19 @@ class HNGui(object):
         if self.config.parser.get('settings', 'cache') != self.cache_manager.cache_path:
             self.cache_manager.cache_path = self.config.parser.get('settings', 'cache')
 
+    def exit(self, must_raise=False):
+        self.poller.is_running = False
+        self.poller.join()
+        if must_raise:
+            raise urwid.ExitMainLoop()
+        urwid.ExitMainLoop()
+
     def run(self):
-        """ Run the loop """
         urwid.connect_signal(self.walker, 'modified', self.update)
 
         try:
+            self.poller.start()
             self.loop.run()
         except KeyboardInterrupt:
-            urwid.ExitMainLoop()
+            self.exit()
         print('Exiting... Bye!')
