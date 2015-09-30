@@ -5,7 +5,7 @@ Hacker news in your terminal.
 
 .. image:: https://raw.github.com/socketubs/pyhn/master/screenshot.png
 
-Don't be worry about your IP. Pyhn is not aggresive, it uses cache.
+Don't be worry about your IP. Pyhn is not aggressive, it uses cache.
 
 * ``Cache manager``
 * ``Customize all the colors``
