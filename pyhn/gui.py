@@ -24,7 +24,7 @@ class ItemWidget(urwid.WidgetWrap):
     def __init__(self, story):
         self.story = story
         self.number = story.number
-        self.title = story.title
+        self.title = story.title.encode('utf-8')
         self.url = story.URL
         self.domain = urlparse(story.domain).netloc
         self.submitter = story.submitter
