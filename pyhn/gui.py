@@ -116,12 +116,12 @@ class HNGui(object):
             'title'))
         self.help_msg.append(urwid.AttrWrap(urwid.Text(''), 'help'))
         self.help_msg.append(
-            urwid.AttrWrap(urwid.Text(' Author : socketubs (Geoffrey Lehée)'), 'help'))
+            urwid.AttrWrap(urwid.Text(' Author : toxinu (Geoffrey Lehée)'), 'help'))
         self.help_msg.append(urwid.AttrWrap(
-            urwid.Text(' Code   : https://github.com/socketubs/pyhn '),
+            urwid.Text(' Code   : https://github.com/toxinu/pyhn '),
             'help'))
         self.help_msg.append(urwid.AttrWrap(
-            urwid.Text(' Website: http://socketubs.org '),
+            urwid.Text(' Website: http://toxi.nu '),
             'help'))
         self.help_msg.append(urwid.AttrWrap(urwid.Text(''), 'help'))
         self.help_msg.append(urwid.AttrWrap(urwid.Text(''), 'help'))
