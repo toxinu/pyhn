@@ -15,23 +15,10 @@ if sys.argv[-1] == 'publish':
     os.system('python setup.py sdist upload')
     sys.exit()
 
-packages = [
-    'pyhn',
-    'pyhn.lib',
-    'pyhn.lib.requests',
-    'pyhn.lib.requests.packages',
-    'pyhn.lib.requests.packages.chardet',
-    'pyhn.lib.requests.packages.urllib3',
-    'pyhn.lib.requests.packages.urllib3.packages',
-    'pyhn.lib.requests.packages.urllib3.contrib',
-    'pyhn.lib.requests.packages.urllib3.util',
-    'pyhn.lib.requests.packages.urllib3.packages.ssl_match_hostname',
-    'pyhn.lib.bs4_py2',
-    'pyhn.lib.bs4_py2.builder',
-    'pyhn.lib.bs4_py3',
-    'pyhn.lib.bs4_py3.builder']
-
-requires = ['urwid==1.3.0']
+requires = [
+    'requests==2.10.0',
+    'beautifulsoup4==4.5.1',
+    'urwid==1.3.1']
 
 version = ''
 with open('pyhn/__init__.py', 'r') as fd:
@@ -54,10 +41,10 @@ setup(
     author_email="contact@toxi.nu",
     url='https://github.com/toxinu/pyhn/',
     keywords="python hackernews hn terminal commandline",
-    packages=packages,
+    packages=['pyhn'],
     scripts=['scripts/pyhn'],
     install_requires=requires,
-    package_data={'': ['LICENSE', 'NOTICE'], 'pyhn.lib.requests': ['*.pem']},
+    package_data={'': ['LICENSE', 'NOTICE']},
     package_dir={'pyhn': 'pyhn'},
     include_package_data=True,
     classifiers=[
