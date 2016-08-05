@@ -37,7 +37,8 @@ policies, either expressed or implied, of Scott Jackson.
 import re
 import sys
 
-from pyhn.lib import requests
+import requests
+from bs4 import BeautifulSoup
 
 PY3 = False
 if sys.version_info.major == 3:
@@ -46,11 +47,9 @@ if sys.version_info.major == 3:
 if PY3:
     from urllib.parse import urljoin
     from urllib.parse import urlparse
-    from pyhn.lib.bs4_py3 import BeautifulSoup
 else:
     from urlparse import urljoin
     from urlparse import urlparse
-    from pyhn.lib.bs4_py2 import BeautifulSoup
 
 HEADERS = {
     'User-Agent': (
