@@ -110,7 +110,8 @@ class Config(object):
         if not self.parser.has_option('colors', 'footer'):
             self.parser.set('colors', 'footer', 'black|light gray')
         if not self.parser.has_option('colors', 'footer-error'):
-            self.parser.set('colors', 'footer-error', 'dark red,bold|light gray')
+            self.parser.set(
+                'colors', 'footer-error', 'dark red,bold|light gray')
         if not self.parser.has_option('colors', 'header'):
             self.parser.set('colors', 'header', 'dark gray,bold|white|')
         if not self.parser.has_option('colors', 'title'):

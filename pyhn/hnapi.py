@@ -72,9 +72,9 @@ class HackerNewsAPI:
     The class for slicing and dicing the HTML and turning
     it into HackerNewsStory objects.
     """
-    numberOfStoriesOnFrontPage = 0
+    number_of_stories_on_front_page = 0
 
-    def getSource(self, url):
+    def get_source(self, url):
         """
         Returns the HTML source code for a URL.
         """
@@ -88,7 +88,7 @@ class HackerNewsAPI:
                 ". Your internet connection may have something "
                 "funny going on, or you could be behind a proxy.")
 
-    def getStoryNumber(self, source):
+    def get_story_number(self, source):
         """
         Parses HTML and returns the number of a story.
         """
@@ -97,13 +97,13 @@ class HackerNewsAPI:
         number = span.string.replace('.', '')
         return int(number)
 
-    def getStoryURL(self, source):
+    def get_story_url(self, source):
         """
         Gets the URL of a story.
         """
-        URLStart = source.find('href="') + 6
-        URLEnd = source.find('">', URLStart)
-        url = source[URLStart:URLEnd]
+        url_start = source.find('href="') + 6
+        url_end = source.find('">', url_start)
+        url = source[url_start:url_end]
         # Check for "Ask HN" links.
         if url[0:4] == "item":  # "Ask HN" links start with "item".
             url = "https://news.ycombinator.com/" + url
@@ -122,7 +122,7 @@ class HackerNewsAPI:
             url = url[:len(url) - 2]
         return url
 
-    def getStoryDomain(self, source):
+    def get_story_domain(self, source):
         """
         Gets the domain of a story.
         """
@@ -133,7 +133,7 @@ class HackerNewsAPI:
             return url
         return urljoin('https://news.ycombinator.com', url)
 
-    def getStoryTitle(self, source):
+    def get_story_title(self, source):
         """
         Gets the title of a story.
         """
@@ -142,46 +142,46 @@ class HackerNewsAPI:
         title = title.strip()
         return title
 
-    def getStoryScore(self, source):
+    def get_story_score(self, source):
         """
         Gets the score of a story.
         """
-        scoreStart = source.find('>', source.find('>') + 1) + 1
-        scoreEnd = source.find(' ', scoreStart)
-        score = source[scoreStart:scoreEnd]
+        score_start = source.find('>', source.find('>') + 1) + 1
+        score_end = source.find(' ', score_start)
+        score = source[score_start:score_end]
         if not score.isdigit():
             return -1
         return int(score)
 
-    def getSubmitter(self, source):
+    def get_submitter(self, source):
         """
         Gets the HN username of the person that submitted a story.
         """
-        submitterStart = source.find('user?id=')
-        realSubmitterStart = source.find('=', submitterStart) + 1
-        submitterEnd = source.find('"', realSubmitterStart)
-        return source[realSubmitterStart:submitterEnd]
+        submitter_start = source.find('user?id=')
+        real_submitter_start = source.find('=', submitter_start) + 1
+        submitter_end = source.find('"', real_submitter_start)
+        return source[real_submitter_start:submitter_end]
 
-    def getCommentCount(self, source):
+    def get_comment_count(self, source):
         """
         Gets the comment count of a story.
         """
-        commentStart = source.find('item?id=')
-        commentCountStart = source.find('>', commentStart) + 1
-        commentEnd = source.find('</a>', commentStart)
-        commentCountString = source[commentCountStart:commentEnd]
-        if commentCountString == "discuss":
+        comment_start = source.find('item?id=')
+        comment_count_start = source.find('>', comment_start) + 1
+        comment_end = source.find('</a>', comment_start)
+        comment_count_string = source[comment_count_start:comment_end]
+        if comment_count_string == "discuss":
             return 0
-        elif commentCountString == "":
+        elif comment_count_string == "":
             return -1
         else:
-            commentCountString = commentCountString.split(' ')[0]
+            comment_count_string = comment_count_string.split(' ')[0]
             try:
-                return int(commentCountString)
+                return int(comment_count_string)
             except ValueError:
                 return -1
 
-    def getPublishedTime(self, source):
+    def get_published_time(self, source):
         """
         Gets the published time ago
         """
@@ -189,36 +189,37 @@ class HackerNewsAPI:
         results = p.search(source)
         return results.group()
 
-    def getHNID(self, source):
+    def get_hn_id(self, source):
         """
         Gets the Hacker News ID of a story.
         """
-        idPrefix = 'score_'
-        urlStart = source.find(idPrefix) + len(idPrefix)
-        if urlStart <= len(idPrefix):
+        id_prefix = 'score_'
+        url_start = source.find(id_prefix) + len(id_prefix)
+        if url_start <= len(id_prefix):
             return -1
-        urlEnd = source.find('"', urlStart)
-        return int(source[urlStart:urlEnd])
+        url_end = source.find('"', url_start)
+        return int(source[url_start:url_end])
 
-    def getCommentsURL(self, source):
+    def get_comments_url(self, source):
         """
         Gets the comment URL of a story.
         """
         return "https://news.ycombinator.com/item?id=" + str(
-            self.getHNID(source))
+            self.get_hn_id(source))
 
-    def getStories(self, source):
+    def get_stories(self, source):
         """
         Looks at source, makes stories from it, returns the stories.
         """
         """ <td align=right valign=top class="title">31.</td> """
-        self.numberOfStoriesOnFrontPage = source.count('span class="rank"')
+        self.number_of_stories_on_front_page = source.count(
+            'span class="rank"')
 
         # Create the empty stories.
-        newsStories = []
-        for i in range(0, self.numberOfStoriesOnFrontPage):
+        news_stories = []
+        for i in range(0, self.number_of_stories_on_front_page):
             story = HackerNewsStory()
-            newsStories.append(story)
+            news_stories.append(story)
 
         soup = BeautifulSoup(source, "html.parser")
         # Gives URLs, Domains and titles.
@@ -226,63 +227,63 @@ class HackerNewsAPI:
         # Gives score, submitter, comment count and comment URL.
         story_other_details = soup.findAll("td", {"class": "subtext"})
         # Get story numbers.
-        storyNumbers = []
+        story_numbers = []
         for i in range(0, len(story_details) - 1, 2):
             # Otherwise, story_details[i] is a BeautifulSoup-defined object.
             story = str(story_details[i])
-            storyNumber = self.getStoryNumber(story)
-            storyNumbers.append(storyNumber)
+            story_number = self.get_story_number(story)
+            story_numbers.append(story_number)
 
-        storyURLs = []
-        storyDomains = []
-        storyTitles = []
-        storyScores = []
-        storySubmitters = []
-        storyCommentCounts = []
-        storyCommentURLs = []
-        storyPublishedTime = []
-        storyIDs = []
+        story_urls = []
+        story_domains = []
+        story_titles = []
+        story_scores = []
+        story_submitters = []
+        story_comment_counts = []
+        story_comment_urls = []
+        story_published_time = []
+        story_ids = []
 
         # Every second cell contains a story.
         for i in range(1, len(story_details), 2):
             story = str(story_details[i])
-            storyURLs.append(self.getStoryURL(story))
-            storyDomains.append(self.getStoryDomain(story))
-            storyTitles.append(self.getStoryTitle(story))
+            story_urls.append(self.get_story_url(story))
+            story_domains.append(self.get_story_domain(story))
+            story_titles.append(self.get_story_title(story))
 
         for s in story_other_details:
             story = str(s)
-            storyScores.append(self.getStoryScore(story))
-            storySubmitters.append(self.getSubmitter(story))
-            storyCommentCounts.append(self.getCommentCount(story))
-            storyCommentURLs.append(self.getCommentsURL(story))
-            storyPublishedTime.append(self.getPublishedTime(story))
-            storyIDs.append(self.getHNID(story))
+            story_scores.append(self.get_story_score(story))
+            story_submitters.append(self.get_submitter(story))
+            story_comment_counts.append(self.get_comment_count(story))
+            story_comment_urls.append(self.get_comments_url(story))
+            story_published_time.append(self.get_published_time(story))
+            story_ids.append(self.get_hn_id(story))
 
         # Associate the values with our newsStories.
-        for i in range(0, self.numberOfStoriesOnFrontPage):
-            newsStories[i].number = storyNumbers[i]
-            newsStories[i].URL = storyURLs[i]
-            newsStories[i].domain = storyDomains[i]
-            newsStories[i].title = storyTitles[i]
-            newsStories[i].score = storyScores[i]
-            newsStories[i].submitter = storySubmitters[i]
-            newsStories[i].submitterURL = \
-                "https://news.ycombinator.com/user?id=" + storySubmitters[i]
-            newsStories[i].commentCount = storyCommentCounts[i]
-            newsStories[i].commentsURL = storyCommentURLs[i]
-            newsStories[i].publishedTime = storyPublishedTime[i]
-            newsStories[i].id = storyIDs[i]
+        for i in range(0, self.number_of_stories_on_front_page):
+            news_stories[i].number = story_numbers[i]
+            news_stories[i].url = story_urls[i]
+            news_stories[i].domain = story_domains[i]
+            news_stories[i].title = story_titles[i]
+            news_stories[i].score = story_scores[i]
+            news_stories[i].submitter = story_submitters[i]
+            news_stories[i].submitter_url = \
+                "https://news.ycombinator.com/user?id=" + story_submitters[i]
+            news_stories[i].comment_count = story_comment_counts[i]
+            news_stories[i].comments_url = story_comment_urls[i]
+            news_stories[i].published_time = story_published_time[i]
+            news_stories[i].id = story_ids[i]
 
-            if newsStories[i].id < 0:
-                newsStories[i].URL.find('item?id=') + 8
-                newsStories[i].commentsURL = ''
-                newsStories[i].submitter = -1
-                newsStories[i].submitterURL = -1
+            if news_stories[i].id < 0:
+                news_stories[i].url.find('item?id=') + 8
+                news_stories[i].comments_url = ''
+                news_stories[i].submitter = -1
+                news_stories[i].submitter_url = -1
 
-        return newsStories
+        return news_stories
 
-    def getMoreLink(self, source):
+    def get_more_link(self, source):
         soup = BeautifulSoup(source, "html.parser")
         more_a = soup.findAll("a", {"rel": "nofollow"}, text="More")
         if more_a:
@@ -296,95 +297,95 @@ class HackerNewsAPI:
     # but I thought it would be simplest if I kept the methods
     # separate.
 
-    def getJobsStories(self, extra_page=1):
+    def get_jobs_stories(self, extra_page=1):
         stories = []
-        source_latest = self.getSource("https://news.ycombinator.com/jobs")
-        stories += self.getStories(source_latest)
+        source_latest = self.get_source("https://news.ycombinator.com/jobs")
+        stories += self.get_stories(source_latest)
         for i in range(1, extra_page + 2):
-            get_more_link = self.getMoreLink(source_latest)
+            get_more_link = self.get_more_link(source_latest)
             if not get_more_link:
                 break
-            source_latest = self.getSource(get_more_link)
-            stories += self.getStories(source_latest)
+            source_latest = self.number_of_stories_on_front_page(get_more_link)
+            stories += self.get_stories(source_latest)
 
         return stories
 
-    def getAskStories(self, extra_page=1):
+    def get_ask_stories(self, extra_page=1):
         stories = []
         for i in range(1, extra_page + 2):
-            source = self.getSource(
+            source = self.number_of_stories_on_front_page(
                 "https://news.ycombinator.com/ask?p=%s" % i)
-            stories += self.getStories(source)
+            stories += self.get_stories(source)
         return stories
 
-    def getShowNewestStories(self, extra_page=1):
+    def get_show_newest_stories(self, extra_page=1):
         stories = []
-        source_latest = self.getSource("https://news.ycombinator.com/shownew")
-        stories += self.getStories(source_latest)
+        source_latest = self.get_source("https://news.ycombinator.com/shownew")
+        stories += self.get_stories(source_latest)
         for i in range(1, extra_page + 2):
-            get_more_link = self.getMoreLink(source_latest)
+            get_more_link = self.get_more_link(source_latest)
             if not get_more_link:
                 break
-            source_latest = self.getSource(get_more_link)
-            stories += self.getStories(source_latest)
+            source_latest = self.get_source(get_more_link)
+            stories += self.get_stories(source_latest)
         return stories
 
-    def getShowStories(self, extra_page=1):
+    def get_show_stories(self, extra_page=1):
         stories = []
-        source_latest = self.getSource("https://news.ycombinator.com/show")
-        stories += self.getStories(source_latest)
+        source_latest = self.get_source("https://news.ycombinator.com/show")
+        stories += self.get_stories(source_latest)
         for i in range(1, extra_page + 2):
-            get_more_link = self.getMoreLink(source_latest)
+            get_more_link = self.get_more_link(source_latest)
             if not get_more_link:
                 break
-            source_latest = self.getSource(get_more_link)
-            stories += self.getStories(source_latest)
+            source_latest = self.get_source(get_more_link)
+            stories += self.get_stories(source_latest)
         return stories
 
-    def getTopStories(self, extra_page=1):
+    def get_top_stories(self, extra_page=1):
         """
         Gets the top stories from Hacker News.
         """
         stories = []
         for i in range(1, extra_page + 2):
-            source = self.getSource(
+            source = self.get_source(
                 "https://news.ycombinator.com/news?p=%s" % i)
-            stories += self.getStories(source)
+            stories += self.get_stories(source)
         return stories
 
-    def getNewestStories(self, extra_page=1):
+    def get_newest_stories(self, extra_page=1):
         """
         Gets the newest stories from Hacker News.
         """
         stories = []
-        source_latest = self.getSource("https://news.ycombinator.com/newest")
-        stories += self.getStories(source_latest)
+        source_latest = self.get_source("https://news.ycombinator.com/newest")
+        stories += self.get_stories(source_latest)
         for i in range(1, extra_page + 2):
-            get_more_link = self.getMoreLink(source_latest)
+            get_more_link = self.get_more_link(source_latest)
             if not get_more_link:
                 break
-            source_latest = self.getSource(get_more_link)
-            stories += self.getStories(source_latest)
+            source_latest = self.get_source(get_more_link)
+            stories += self.get_stories(source_latest)
         return stories
 
-    def getBestStories(self, extra_page=1):
+    def get_best_stories(self, extra_page=1):
         """
         Gets the "best" stories from Hacker News.
         """
         stories = []
         for i in range(1, extra_page + 2):
-            source_latest = self.getSource(
+            source_latest = self.get_source(
                 "https://news.ycombinator.com/best?p=%s" % i)
-            stories += self.getStories(source_latest)
+            stories += self.get_stories(source_latest)
         return stories
 
-    def getPageStories(self, pageId):
+    def get_page_stories(self, pageId):
         """
         Gets the pageId stories from Hacker News.
         """
-        source = self.getSource(
+        source = self.get_source(
             "https://news.ycombinator.com/x?fnid=%s" % pageId)
-        stories = self.getStories(source)
+        stories = self.get_stories(source)
         return stories
 
 
@@ -396,14 +397,14 @@ class HackerNewsStory:
     number = -1  # What rank the story is on HN.
     title = ""   # The title of the story.
     domain = ""  # The website the story is from.
-    URL = ""     # The URL of the story.
+    url = ""     # The URL of the story.
     score = -1   # Current score of the story.
     submitter = ""       # The person that submitted the story.
-    commentCount = -1    # How many comments the story has.
-    commentsURL = ""     # The HN link for commenting (and upmodding).
-    publishedTime = ""   # The time sinc story was published
+    comment_count = -1    # How many comments the story has.
+    comments_url = ""     # The HN link for commenting (and upmodding).
+    published_time = ""   # The time sinc story was published
 
-    def getComments(self):
+    def get_comments(self):
         url = (
             'http://hndroidapi.appspot.com/'
             'nestedcomments/format/json/id/%s' % self.id)
@@ -417,18 +418,18 @@ class HackerNewsStory:
                 ". Your internet connection may have something funny "
                 "going on, or you could be behind a proxy.")
 
-    def printDetails(self):
+    def print_details(self):
         """
         Prints details of the story.
         """
         print(str(self.number) + ": " + self.title)
-        print("URL: %s" % self.URL)
+        print("URL: %s" % self.url)
         print("domain: %s" % self.domain)
         print("score: " + str(self.score) + " points")
         print("submitted by: " + self.submitter)
-        print("sinc %s" + self.publishedTime)
-        print("of comments: " + str(self.commentCount))
-        print("'discuss' URL: " + self.commentsURL)
+        print("sinc %s" + self.published_time)
+        print("of comments: " + str(self.comment_count))
+        print("'discuss' URL: " + self.comments_url)
         print("HN ID: " + str(self.id))
         print(" ")
 
@@ -440,28 +441,29 @@ class HackerNewsUser:
     # Default value. I don't think anyone really has -10000 karma.
     karma = -10000
     name = ""  # The user's HN username.
-    userPageURL = ""  # The URL of the user's 'user' page.
-    threadsPageURL = ""  # The URL of the user's 'threads' page.
+    user_page_url = ""  # The URL of the user's 'user' page.
+    threads_page_url = ""  # The URL of the user's 'threads' page.
 
     def __init__(self, username):
         """
         Constructor for the user class.
         """
         self.name = username
-        self.userPageURL = "https://news.ycombinator.com/user?id=" + self.name
-        self.threadsPageURL = (
+        self.user_page_url = (
+            "https://news.ycombinator.com/user?id=" + self.name)
+        self.threads_page_url = (
             "https://news.ycombinator.com/threads?id=%s" % self.name)
-        self.refreshKarma()
+        self.refresh_karma()
 
-    def refreshKarma(self):
+    def refresh_karma(self):
         """
         Gets the karma count of a user from the source of their 'user' page.
         """
         hn = HackerNewsAPI()
-        source = hn.getSource(self.userPageURL)
-        karmaStart = source.find('<td valign=top>karma:</td><td>') + 30
-        karmaEnd = source.find('</td>', karmaStart)
-        karma = source[karmaStart:karmaEnd]
+        source = hn.get_source(self.user_page_url)
+        karma_start = source.find('<td valign=top>karma:</td><td>') + 30
+        karma_end = source.find('</td>', karma_start)
+        karma = source[karma_start:karma_end]
         if karma is not '':
             self.karma = int(karma)
         else:

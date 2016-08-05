@@ -8,7 +8,6 @@ from pyhn.hnapi import HackerNewsAPI
 
 
 class CacheManager(object):
-
     def __init__(self, cache_path=None):
         self.cache_path = cache_path
         if cache_path is None:
@@ -41,22 +40,24 @@ class CacheManager(object):
 
     def refresh(self, which="top"):
         if which == "top":
-            stories = self.api.getTopStories(extra_page=self.extra_page)
+            stories = self.api.get_top_stories(extra_page=self.extra_page)
         elif which == "newest":
-            stories = self.api.getNewestStories(extra_page=self.extra_page)
+            stories = self.api.get_newest_stories(extra_page=self.extra_page)
         elif which == "best":
-            stories = self.api.getBestStories(extra_page=self.extra_page)
+            stories = self.api.get_best_stories(extra_page=self.extra_page)
         elif which == "show":
-            stories = self.api.getShowStories(extra_page=self.extra_page)
+            stories = self.api.get_show_stories(extra_page=self.extra_page)
         elif which == "show_newest":
-            stories = self.api.getShowNewestStories(extra_page=self.extra_page)
+            stories = self.api.get_show_newest_stories(
+                extra_page=self.extra_page)
         elif which == "ask":
-            stories = self.api.getAskStories(extra_page=self.extra_page)
+            stories = self.api.get_ask_stories(extra_page=self.extra_page)
         elif which == "jobs":
-            stories = self.api.getJobsStories(extra_page=self.extra_page)
+            stories = self.api.get_bobs_stories(extra_page=self.extra_page)
         else:
             raise Exception(
-                'Bad value: top, newest, ask, jobs, show, shownewest and best stories')
+                'Bad value: top, newest, ask, jobs,'
+                'show, shownewest and best stories')
 
         cache = {}
         if os.path.exists(self.cache_path):

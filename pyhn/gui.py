@@ -4,6 +4,11 @@ import urwid
 import subprocess
 import threading
 
+from pyhn.popup import Popup
+from pyhn.poller import Poller
+from pyhn.config import Config
+from pyhn import __version__
+
 PY3 = False
 if sys.version_info.major == 3:
     PY3 = True
@@ -13,11 +18,6 @@ if PY3:
 else:
     from urlparse import urlparse
 
-from pyhn.popup import Popup
-from pyhn.poller import Poller
-from pyhn.config import Config
-from pyhn import __version__ as VERSION
-
 
 class ItemWidget(urwid.WidgetWrap):
     """ Widget of listbox, represent each story """
@@ -25,14 +25,14 @@ class ItemWidget(urwid.WidgetWrap):
         self.story = story
         self.number = story.number
         self.title = story.title.encode('utf-8')
-        self.url = story.URL
+        self.url = story.url
         self.domain = urlparse(story.domain).netloc
         self.submitter = story.submitter
-        self.submitter_url = story.submitterURL
-        self.comment_count = story.commentCount
-        self.comments_url = story.commentsURL
+        self.submitter_url = story.submitter_url
+        self.comment_count = story.comment_count
+        self.comments_url = story.comments_url
         self.score = story.score
-        self.published_time = story.publishedTime
+        self.published_time = story.published_time
 
         if self.submitter == -1:
             self.submitter = "-"
@@ -53,7 +53,8 @@ class ItemWidget(urwid.WidgetWrap):
 
         self.item = [
             ('fixed', 4, urwid.Padding(urwid.AttrWrap(
-                urwid.Text("%s:" % self.number, align="right"), 'body', 'focus'))),
+                urwid.Text(
+                    "%s:" % self.number, align="right"), 'body', 'focus'))),
             urwid.AttrWrap(
                 urwid.Text(title), 'body', 'focus'),
             ('fixed', 5, urwid.Padding(urwid.AttrWrap(
@@ -83,7 +84,8 @@ class HNGui(object):
 
         self.config = Config()
         self.poller = Poller(
-            self, delay=int(self.config.parser.get('settings', 'refresh_interval')))
+            self, delay=int(
+                self.config.parser.get('settings', 'refresh_interval')))
         self.palette = self.config.get_palette()
 
     def main(self):
@@ -100,23 +102,27 @@ class HNGui(object):
         """ Fetch all key bindings and build help message """
         self.bindings = {}
         self.help_msg = []
-        self.help_msg.append(urwid.AttrWrap(urwid.Text('\n Key bindings \n'), 'title'))
+        self.help_msg.append(
+            urwid.AttrWrap(urwid.Text('\n Key bindings \n'), 'title'))
         self.help_msg.append(urwid.AttrWrap(urwid.Text(''), 'help'))
         for binding in self.config.parser.items('keybindings'):
             self.bindings[binding[0]] = binding[1]
             line = urwid.AttrWrap(
-                urwid.Text(' %s: %s ' % (binding[1], binding[0].replace('_', ' '))),
+                urwid.Text(
+                    ' %s: %s ' % (binding[1], binding[0].replace('_', ' '))),
                 'help')
             self.help_msg.append(line)
         self.help_msg.append(urwid.AttrWrap(
             urwid.Text(' ctrl mouse-left: open story link'), 'help'))
         self.help_msg.append(urwid.AttrWrap(urwid.Text(''), 'help'))
         self.help_msg.append(urwid.AttrWrap(
-            urwid.Text(' Thanks for using Pyhn %s! ' % VERSION, align='center'),
+            urwid.Text(
+                ' Thanks for using Pyhn %s! ' % __version__, align='center'),
             'title'))
         self.help_msg.append(urwid.AttrWrap(urwid.Text(''), 'help'))
         self.help_msg.append(
-            urwid.AttrWrap(urwid.Text(' Author : toxinu (Geoffrey Lehée)'), 'help'))
+            urwid.AttrWrap(urwid.Text(
+                ' Author : toxinu (Geoffrey Lehée)'), 'help'))
         self.help_msg.append(urwid.AttrWrap(
             urwid.Text(' Code   : https://github.com/toxinu/pyhn '),
             'help'))
@@ -131,8 +137,8 @@ class HNGui(object):
 
     def build_interface(self):
         """
-        Build interface, refresh cache if needed, update stories listbox, create
-        header, footer, view and the loop.
+        Build interface, refresh cache if needed, update stories listbox,
+        create header, footer, view and the loop.
         """
         if self.cache_manager.is_outdated():
             self.cache_manager.refresh()
@@ -140,20 +146,24 @@ class HNGui(object):
         self.stories = self.cache_manager.get_stories()
         self.update_stories(self.stories)
         self.header_content = [
-            ('fixed', 4, urwid.Padding(urwid.AttrWrap(urwid.Text(' N°'), 'header'))),
+            ('fixed', 4, urwid.Padding(
+                urwid.AttrWrap(urwid.Text(' N°'), 'header'))),
             urwid.AttrWrap(urwid.Text('TOP STORIES', align="center"), 'title'),
-            ('fixed', 5, urwid.Padding(urwid.AttrWrap(urwid.Text('SCORE'), 'header'))),
-            ('fixed', 8, urwid.Padding(urwid.AttrWrap(urwid.Text('COMMENTS'), 'header')))]
+            ('fixed', 5, urwid.Padding(
+                urwid.AttrWrap(urwid.Text('SCORE'), 'header'))),
+            ('fixed', 8, urwid.Padding(
+                urwid.AttrWrap(urwid.Text('COMMENTS'), 'header')))]
 
         self.header = urwid.Columns(self.header_content, dividechars=1)
         self.footer = urwid.AttrMap(
             urwid.Text(
-                'Welcome in pyhn by socketubs (https://github.com/socketubs/pyhn)',
-                align='center'),
+                'Welcome in pyhn by toxinu '
+                '(https://github.com/toxinu/pyhn)', align='center'),
             'footer')
 
         self.view = urwid.Frame(
-            urwid.AttrWrap(self.listbox, 'body'), header=self.header, footer=self.footer)
+            urwid.AttrWrap(
+                self.listbox, 'body'), header=self.header, footer=self.footer)
         self.loop = urwid.MainLoop(
             self.view,
             self.palette,
@@ -180,7 +190,8 @@ class HNGui(object):
 
     def set_header(self, msg):
         """ Set header story message """
-        self.header_content[1] = urwid.AttrWrap(urwid.Text(msg, align="center"), 'title')
+        self.header_content[1] = urwid.AttrWrap(
+            urwid.Text(msg, align="center"), 'title')
         self.view.set_header(urwid.Columns(self.header_content, dividechars=1))
 
     def keystroke(self, input):
@@ -197,7 +208,8 @@ class HNGui(object):
                     self.show_comments(self.listbox.get_focus()[0])
                     self.on_comments = True
                 else:
-                    self.update_stories(self.cache_manager.get_stories(self.which))
+                    self.update_stories(
+                        self.cache_manager.get_stories(self.which))
                     self.on_comments = False
                 self.open_webbrowser(self.listbox.get_focus()[0].comments_url)
         if input in self.bindings['show_comments_link'].split(','):
@@ -248,15 +260,18 @@ class HNGui(object):
         if input in self.bindings['top_stories'].split(','):
             self.set_footer('Syncing top stories...')
             threading.Thread(
-                None, self.async_refresher, None, ('top', 'TOP STORIES'), {}).start()
+                None, self.async_refresher,
+                None, ('top', 'TOP STORIES'), {}).start()
         if input in self.bindings['best_stories'].split(','):
             self.set_footer('Syncing best stories...')
             threading.Thread(
-                None, self.async_refresher, None, ('best', 'BEST STORIES'), {}).start()
+                None, self.async_refresher,
+                None, ('best', 'BEST STORIES'), {}).start()
         if input in self.bindings['show_stories'].split(','):
             self.set_footer('Syncing show stories...')
             threading.Thread(
-                None, self.async_refresher, None, ('show', 'SHOW STORIES'), {}).start()
+                None, self.async_refresher,
+                None, ('show', 'SHOW STORIES'), {}).start()
         if input in self.bindings['show_newest_stories'].split(','):
             self.set_footer('Syncing show newest stories...')
             threading.Thread(
@@ -268,11 +283,13 @@ class HNGui(object):
         if input in self.bindings['ask_stories'].split(','):
             self.set_footer('Syncing ask stories...')
             threading.Thread(
-                None, self.async_refresher, None, ('ask', 'ASK STORIES'), {}).start()
+                None, self.async_refresher,
+                None, ('ask', 'ASK STORIES'), {}).start()
         if input in self.bindings['jobs_stories'].split(','):
             self.set_footer('Syncing jobs stories...')
             threading.Thread(
-                None, self.async_refresher, None, ('jobs', 'JOBS STORIES'), {}).start()
+                None, self.async_refresher,
+                None, ('jobs', 'JOBS STORIES'), {}).start()
         # OTHERS
         if input in self.bindings['refresh'].split(','):
             self.set_footer('Refreshing new stories...')
@@ -360,7 +377,8 @@ class HNGui(object):
         if focus.submitter == "":
             msg = "submitted %s" % focus.published_time
         else:
-            msg = "submitted %s by %s" % (focus.published_time, focus.submitter)
+            msg = "submitted %s by %s" % (
+                focus.published_time, focus.submitter)
 
         self.set_footer(msg)
 
@@ -377,8 +395,10 @@ class HNGui(object):
         self.loop.draw_screen()
         self.set_footer('Configuration file reloaded!')
 
-        if self.config.parser.get('settings', 'cache') != self.cache_manager.cache_path:
-            self.cache_manager.cache_path = self.config.parser.get('settings', 'cache')
+        if self.config.parser.get(
+                'settings', 'cache') != self.cache_manager.cache_path:
+            self.cache_manager.cache_path = self.config.parser.get(
+                'settings', 'cache')
 
     def exit(self, must_raise=False):
         self.poller.is_running = False
