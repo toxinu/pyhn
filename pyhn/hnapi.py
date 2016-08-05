@@ -92,7 +92,7 @@ class HackerNewsAPI:
         """
         Parses HTML and returns the number of a story.
         """
-        bs = BeautifulSoup(source)
+        bs = BeautifulSoup(source, "html.parser")
         span = bs.find('span', attrs={'class': 'rank'})
         number = span.string.replace('.', '')
         return int(number)
@@ -126,7 +126,7 @@ class HackerNewsAPI:
         """
         Gets the domain of a story.
         """
-        bs = BeautifulSoup(source)
+        bs = BeautifulSoup(source, "html.parser")
         url = bs.find('a').get('href')
         url_parsed = urlparse(url)
         if url_parsed.netloc:
@@ -137,7 +137,7 @@ class HackerNewsAPI:
         """
         Gets the title of a story.
         """
-        bs = BeautifulSoup(source)
+        bs = BeautifulSoup(source, "html.parser")
         title = bs.find('td', attrs={'class': 'title'}).text
         title = title.strip()
         return title
@@ -220,7 +220,7 @@ class HackerNewsAPI:
             story = HackerNewsStory()
             newsStories.append(story)
 
-        soup = BeautifulSoup(source)
+        soup = BeautifulSoup(source, "html.parser")
         # Gives URLs, Domains and titles.
         story_details = soup.findAll("td", {"class": "title"})
         # Gives score, submitter, comment count and comment URL.
@@ -283,7 +283,7 @@ class HackerNewsAPI:
         return newsStories
 
     def getMoreLink(self, source):
-        soup = BeautifulSoup(source)
+        soup = BeautifulSoup(source, "html.parser")
         more_a = soup.findAll("a", {"rel": "nofollow"}, text="More")
         if more_a:
             return urljoin('https://news.ycombinator.com/', more_a[0]['href'])
