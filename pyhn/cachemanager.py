@@ -53,7 +53,7 @@ class CacheManager(object):
         elif which == "ask":
             stories = self.api.get_ask_stories(extra_page=self.extra_page)
         elif which == "jobs":
-            stories = self.api.get_bobs_stories(extra_page=self.extra_page)
+            stories = self.api.get_jobs_stories(extra_page=self.extra_page)
         else:
             raise Exception(
                 'Bad value: top, newest, ask, jobs,'
