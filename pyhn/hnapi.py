@@ -185,9 +185,12 @@ class HackerNewsAPI:
         """
         Gets the published time ago
         """
-        p = re.compile(r'\d{1,} (minutes|minute|hours|hour|day|days) ago')
-        results = p.search(source)
-        return results.group()
+        p = re.compile(r'\d{1,}\s(minutes|minute|hours|hour|day|days)\sago', re.U)
+        results = p.search(source.decode('utf-8'))
+        if results:
+            return results.group()
+        else:
+            return None
 
     def get_hn_id(self, source):
         """
