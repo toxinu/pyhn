@@ -94,8 +94,9 @@ class HackerNewsAPI:
         """
         bs = BeautifulSoup(source, "html.parser")
         span = bs.find('span', attrs={'class': 'rank'})
-        number = span.string.replace('.', '')
-        return int(number)
+        if span.string:
+            number = span.string.replace('.', '')
+            return int(number)
 
     def get_story_url(self, source):
         """
@@ -146,62 +147,70 @@ class HackerNewsAPI:
         """
         Gets the score of a story.
         """
-        score_start = source.find('>', source.find('>') + 1) + 1
-        score_end = source.find(' ', score_start)
-        score = source[score_start:score_end]
-        if not score.isdigit():
-            return -1
-        return int(score)
+        bs = BeautifulSoup(source, "html.parser")
+        tags = bs.find_all('span', {'class': 'score'})
+        if tags:
+            score = tags[0].text.split(u'\xa0')
+            if score and score[0].isdigit():
+                return int(score[0])
 
     def get_submitter(self, source):
         """
         Gets the HN username of the person that submitted a story.
         """
-        submitter_start = source.find('user?id=')
-        real_submitter_start = source.find('=', submitter_start) + 1
-        submitter_end = source.find('"', real_submitter_start)
-        return source[real_submitter_start:submitter_end]
+        bs = BeautifulSoup(source, "html.parser")
+        tags = bs.find_all('a', {'class': 'hnuser'})
+        if tags:
+            return tags[0].text
 
     def get_comment_count(self, source):
         """
         Gets the comment count of a story.
         """
-        comment_start = source.find('item?id=')
-        comment_count_start = source.find('>', comment_start) + 1
-        comment_end = source.find('</a>', comment_start)
-        comment_count_string = source[comment_count_start:comment_end]
-        if comment_count_string == "discuss":
-            return 0
-        elif comment_count_string == "":
-            return -1
-        else:
-            comment_count_string = comment_count_string.split(' ')[0]
+        bs = BeautifulSoup(source, "html.parser")
+        comments = bs.find_all('a', text=re.compile('comment'))
+        if comments:
+            comments = comments[0].text
+            separator = u'\xc2\xa0'
+            if separator in comments:
+                comments = comments.split(separator)[0]
+            else:
+                comments = comments.split(u'\xa0')[0]
             try:
-                return int(comment_count_string)
+                return int(comments)
             except ValueError:
-                return -1
+                return None
+
+        comments = bs.find_all('a', text=re.compile('discuss'))
+        if comments:
+            return 0
 
     def get_published_time(self, source):
         """
         Gets the published time ago
         """
-        p = re.compile(r'\d{1,}\s(minutes|minute|hours|hour|day|days)\sago', flags=re.U)
-        results = p.search(source.decode('utf-8'))
+        p = re.compile(
+            r'\d{1,}\s(minutes|minute|hours|hour|day|days)\sago', flags=re.U)
+
+        if not PY3:
+            source = source.decode('utf-8')
+
+        results = p.search(source)
         if results:
             return results.group()
-        else:
-            return None
 
     def get_hn_id(self, source):
         """
         Gets the Hacker News ID of a story.
         """
-        id_prefix = 'score_'
-        url_start = source.find(id_prefix) + len(id_prefix)
-        if url_start <= len(id_prefix):
-            return -1
-        url_end = source.find('"', url_start)
-        return int(source[url_start:url_end])
+        bs = BeautifulSoup(source, "html.parser")
+        hn_id = bs.find_all('a', {'href': re.compile('item\?id=')})
+        if hn_id:
+            hn_id = hn_id[0].get('href')
+            if hn_id:
+                hn_id = hn_id.split('item?id=')[-1]
+                if hn_id.isdigit():
+                    return int(hn_id)
 
     def get_comments_url(self, source):
         """
@@ -271,8 +280,12 @@ class HackerNewsAPI:
             news_stories[i].title = story_titles[i]
             news_stories[i].score = story_scores[i]
             news_stories[i].submitter = story_submitters[i]
-            news_stories[i].submitter_url = \
-                "https://news.ycombinator.com/user?id=" + story_submitters[i]
+            if news_stories[i].submitter:
+                news_stories[i].submitter_url = (
+                    "https://news.ycombinator.com/user?id={}".format(
+                        story_submitters[i]))
+            else:
+                news_stories[i].submitter_url = None
             news_stories[i].comment_count = story_comment_counts[i]
             news_stories[i].comments_url = story_comment_urls[i]
             news_stories[i].published_time = story_published_time[i]
@@ -281,8 +294,8 @@ class HackerNewsAPI:
             if news_stories[i].id < 0:
                 news_stories[i].url.find('item?id=') + 8
                 news_stories[i].comments_url = ''
-                news_stories[i].submitter = -1
-                news_stories[i].submitter_url = -1
+                news_stories[i].submitter = None
+                news_stories[i].submitter_url = None
 
         return news_stories
 
@@ -308,7 +321,7 @@ class HackerNewsAPI:
             get_more_link = self.get_more_link(source_latest)
             if not get_more_link:
                 break
-            source_latest = self.number_of_stories_on_front_page(get_more_link)
+            source_latest = self.get_source(get_more_link)
             stories += self.get_stories(source_latest)
 
         return stories
@@ -396,14 +409,14 @@ class HackerNewsStory:
     """
     A class representing a story on Hacker News.
     """
-    id = 0       # The Hacker News ID of a story.
-    number = -1  # What rank the story is on HN.
-    title = ""   # The title of the story.
-    domain = ""  # The website the story is from.
-    url = ""     # The URL of the story.
-    score = -1   # Current score of the story.
-    submitter = ""       # The person that submitted the story.
-    comment_count = -1    # How many comments the story has.
+    id = 0         # The Hacker News ID of a story.
+    number = None  # What rank the story is on HN.
+    title = ""     # The title of the story.
+    domain = ""    # The website the story is from.
+    url = ""       # The URL of the story.
+    score = None   # Current score of the story.
+    submitter = ""        # The person that submitted the story.
+    comment_count = None  # How many comments the story has.
     comments_url = ""     # The HN link for commenting (and upmodding).
     published_time = ""   # The time sinc story was published
 
