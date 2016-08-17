@@ -34,16 +34,27 @@ class ItemWidget(urwid.WidgetWrap):
         self.score = story.score
         self.published_time = story.published_time
 
-        if self.submitter == -1:
-            self.submitter = "-"
-            self.submitter_url = -1
+        if self.number is None:
+            number_text = '-'
+            number_align = 'center'
+            self.number = '-'
+        else:
+            number_align = 'right'
+            number_text = '%s:' % self.number
 
-        if self.score == -1:
+        if self.submitter is None:
+            self.submitter = None
+            self.submitter_url = None
+
+        if self.score is None:
             self.score = "-"
 
-        if self.comment_count == -1:
-            self.comment_count = "-"
-            self.comments_url = -1
+        if self.comment_count is None:
+            comment_text = '-'
+            self.comment_count = None
+            self.comments_url = None
+        else:
+            comment_text = '%s' % self.comment_count
 
         title = self.title
         try:
@@ -53,17 +64,15 @@ class ItemWidget(urwid.WidgetWrap):
 
         self.item = [
             ('fixed', 4, urwid.Padding(urwid.AttrWrap(
-                urwid.Text(
-                    "%s:" % self.number, align="right"), 'body', 'focus'))),
+                urwid.Text(number_text, align=number_align),
+                'body', 'focus'))),
             urwid.AttrWrap(
                 urwid.Text(title), 'body', 'focus'),
             ('fixed', 5, urwid.Padding(urwid.AttrWrap(
                 urwid.Text(str(self.score), align="right"), 'body', 'focus'))),
             ('fixed', 8, urwid.Padding(urwid.AttrWrap(
-                urwid.Text(str(self.comment_count), align="right"),
-                'body',
-                'focus'))),
-        ]
+                urwid.Text(comment_text, align="right"),
+                'body', 'focus')))]
         w = urwid.Columns(self.item, focus_column=1, dividechars=1)
         self.__super.__init__(w)
 
@@ -201,7 +210,7 @@ class HNGui(object):
             self.exit(must_raise=True)
         # LINKS
         if input in self.bindings['open_comments_link'].split(','):
-            if self.listbox.get_focus()[0].comments_url == -1:
+            if not self.listbox.get_focus()[0].comments_url:
                 self.set_footer('No comments')
             else:
                 if not self.on_comments:
@@ -213,7 +222,7 @@ class HNGui(object):
                     self.on_comments = False
                 self.open_webbrowser(self.listbox.get_focus()[0].comments_url)
         if input in self.bindings['show_comments_link'].split(','):
-            if self.listbox.get_focus()[0].comments_url == -1:
+            if not self.listbox.get_focus()[0].comments_url:
                 self.set_footer('No comments')
             else:
                 self.set_footer(self.listbox.get_focus()[0].comments_url)
@@ -222,13 +231,13 @@ class HNGui(object):
         if input in self.bindings['show_story_link'].split(','):
             self.set_footer(self.listbox.get_focus()[0].url)
         if input in self.bindings['open_submitter_link'].split(','):
-            if self.listbox.get_focus()[0].submitter_url == -1:
-                self.set_footer('Anonymous submitter')
+            if not self.listbox.get_focus()[0].submitter_url:
+                self.set_footer('No submitter')
             else:
                 self.open_webbrowser(self.listbox.get_focus()[0].submitter_url)
         if input in self.bindings['show_submitter_link'].split(','):
-            if self.listbox.get_focus()[0].submitter_url == -1:
-                self.set_footer('Anonymous submitter')
+            if not self.listbox.get_focus()[0].submitter_url:
+                self.set_footer('No submitter')
             else:
                 self.set_footer(self.listbox.get_focus()[0].submitter_url)
         # MOVEMENTS
@@ -328,7 +337,7 @@ class HNGui(object):
         items = []
         item_ids = []
         for story in stories:
-            if story.id != -1 and story.id in item_ids:
+            if story.id is not None and story.id in item_ids:
                 story.title = "- %s" % story.title
                 items.append(ItemWidget(story))
             else:
@@ -374,7 +383,7 @@ class HNGui(object):
     def update(self):
         """ Update footer about focus story """
         focus = self.listbox.get_focus()[0]
-        if focus.submitter == "":
+        if not focus.submitter:
             msg = "submitted %s" % focus.published_time
         else:
             msg = "submitted %s by %s" % (
