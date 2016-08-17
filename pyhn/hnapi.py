@@ -185,7 +185,7 @@ class HackerNewsAPI:
         """
         Gets the published time ago
         """
-        p = re.compile(r'\d{1,}\s(minutes|minute|hours|hour|day|days)\sago', re.U)
+        p = re.compile(r'\d{1,}\s(minutes|minute|hours|hour|day|days)\sago', flags=re.U)
         results = p.search(source.decode('utf-8'))
         if results:
             return results.group()
