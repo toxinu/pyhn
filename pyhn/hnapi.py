@@ -54,7 +54,7 @@ else:
 HEADERS = {
     'User-Agent': (
         "Pyhn (Hacker news command line client) - "
-        "https://github.com/socketubs/pyhn")}
+        "https://github.com/toxinu/pyhn")}
 
 
 class HNException(Exception):
