@@ -151,6 +151,8 @@ class HackerNewsAPI:
         tags = bs.find_all('span', {'class': 'score'})
         if tags:
             score = tags[0].text.split(u'\xa0')
+            if not score or not score[0].isdigit():
+                score = tags[0].text.split(' ')
             if score and score[0].isdigit():
                 return int(score[0])
 
