@@ -131,12 +131,12 @@ class HNGui(object):
         self.help_msg.append(urwid.AttrWrap(urwid.Text(''), 'help'))
         self.help_msg.append(
             urwid.AttrWrap(urwid.Text(
-                ' Author : toxinu (Geoffrey Lehée)'), 'help'))
+                ' Author : toxinu'), 'help'))
         self.help_msg.append(urwid.AttrWrap(
             urwid.Text(' Code   : https://github.com/toxinu/pyhn '),
             'help'))
         self.help_msg.append(urwid.AttrWrap(
-            urwid.Text(' Website: http://toxi.nu '),
+            urwid.Text(' Website: http://toxinu.github.io '),
             'help'))
         self.help_msg.append(urwid.AttrWrap(urwid.Text(''), 'help'))
         self.help_msg.append(urwid.AttrWrap(urwid.Text(''), 'help'))
