@@ -7,6 +7,10 @@ except ImportError:
     from ConfigParser import SafeConfigParser
 
 
+TRUE_WORDS = ['true', 'True', 'yes', '1']
+FALSE_WORDS = ['false', 'False', 'no', 0]
+
+
 class Config(object):
     def __init__(self, config_dir=None, config_file=None):
         self.config_dir = config_dir
@@ -79,12 +83,21 @@ class Config(object):
             self.parser.set('keybindings', 'ask_stories', 'a')
         if not self.parser.has_option('keybindings', 'jobs_stories'):
             self.parser.set('keybindings', 'jobs_stories', 'J')
+        # Interface
+        if not self.parser.has_section('interface'):
+            self.parser.add_section('interface')
+        if not self.parser.has_option('interface', 'show_score'):
+            self.parser.set('interface', 'show_score', 'true')
+        if not self.parser.has_option('interface', 'show_comments'):
+            self.parser.set('interface', 'show_comments', 'true')
+        if not self.parser.has_option('interface', 'show_published_time'):
+            self.parser.set('interface', 'show_published_time', 'false')
         # Paths
         if not self.parser.has_section('settings'):
             self.parser.add_section('settings')
 
         if not self.parser.has_option('settings', 'extra_page'):
-            self.parser.set('settings', 'extra_page', '1')
+            self.parser.set('settings', 'extra_page', '2')
 
         if not self.parser.has_option('settings', 'cache'):
             self.parser.set(

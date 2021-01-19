@@ -6,7 +6,7 @@ import threading
 
 from pyhn.popup import Popup
 from pyhn.poller import Poller
-from pyhn.config import Config
+from pyhn.config import Config, FALSE_WORDS, TRUE_WORDS
 from pyhn import __version__
 
 PY3 = False
@@ -21,7 +21,7 @@ else:
 
 class ItemWidget(urwid.WidgetWrap):
     """ Widget of listbox, represent each story """
-    def __init__(self, story):
+    def __init__(self, story, show_published_time, show_score, show_comments):
         self.story = story
         self.number = story.number
         self.title = story.title.encode('utf-8')
@@ -33,6 +33,9 @@ class ItemWidget(urwid.WidgetWrap):
         self.comments_url = story.comments_url
         self.score = story.score
         self.published_time = story.published_time
+        self.show_published_time = show_published_time
+        self.show_score = show_score
+        self.show_comments = show_comments
 
         if self.number is None:
             number_text = '-'
@@ -68,11 +71,23 @@ class ItemWidget(urwid.WidgetWrap):
                 'body', 'focus'))),
             urwid.AttrWrap(
                 urwid.Text(title), 'body', 'focus'),
-            ('fixed', 5, urwid.Padding(urwid.AttrWrap(
-                urwid.Text(str(self.score), align="right"), 'body', 'focus'))),
-            ('fixed', 8, urwid.Padding(urwid.AttrWrap(
-                urwid.Text(comment_text, align="right"),
-                'body', 'focus')))]
+        ]
+        if self.show_published_time:
+            self.item.append(
+                ('fixed', 15, urwid.Padding(urwid.AttrWrap(
+                urwid.Text(str(self.published_time), align="right"), 'body', 'focus'))),
+            )
+        if self.show_score:
+            self.item.append(
+                ('fixed', 5, urwid.Padding(urwid.AttrWrap(
+                    urwid.Text(str(self.score), align="right"), 'body', 'focus'))),
+            )
+        if self.show_comments:
+            self.item.append(
+                ('fixed', 8, urwid.Padding(urwid.AttrWrap(
+                    urwid.Text(comment_text, align="right"),
+                    'body', 'focus')))
+            )
         w = urwid.Columns(self.item, focus_column=1, dividechars=1)
         self.__super.__init__(w)
 
@@ -96,6 +111,10 @@ class HNGui(object):
             self, delay=int(
                 self.config.parser.get('settings', 'refresh_interval')))
         self.palette = self.config.get_palette()
+        self.show_comments = self.config.parser.get('interface', 'show_comments') in TRUE_WORDS
+        self.show_score = self.config.parser.get('interface', 'show_score') in TRUE_WORDS
+        self.show_published_time = self.config.parser.get(
+            'interface', 'show_published_time') in TRUE_WORDS
 
     def main(self):
         """
@@ -158,11 +177,22 @@ class HNGui(object):
             ('fixed', 4, urwid.Padding(
                 urwid.AttrWrap(urwid.Text(' N°'), 'header'))),
             urwid.AttrWrap(urwid.Text('TOP STORIES', align="center"), 'title'),
-            ('fixed', 5, urwid.Padding(
+        ]
+        if self.show_published_time:
+            self.header_content.append(
+                ('fixed', 15, urwid.Padding(
+                urwid.AttrWrap(urwid.Text('PUBLISHED TIME'), 'header'))),
+            )
+        if self.show_score:
+            self.header_content.append(
+                ('fixed', 5, urwid.Padding(
                 urwid.AttrWrap(urwid.Text('SCORE'), 'header'))),
-            ('fixed', 8, urwid.Padding(
-                urwid.AttrWrap(urwid.Text('COMMENTS'), 'header')))]
-
+            )
+        if self.show_comments:
+            self.header_content.append(
+                ('fixed', 8, urwid.Padding(
+                    urwid.AttrWrap(urwid.Text('COMMENTS'), 'header')))
+            )
         self.header = urwid.Columns(self.header_content, dividechars=1)
         self.footer = urwid.AttrMap(
             urwid.Text(
@@ -339,9 +369,17 @@ class HNGui(object):
         for story in stories:
             if story.id is not None and story.id in item_ids:
                 story.title = "- %s" % story.title
-                items.append(ItemWidget(story))
+                items.append(ItemWidget(
+                    story,
+                    self.show_published_time,
+                    self.show_score,
+                    self.show_comments))
             else:
-                items.append(ItemWidget(story))
+                items.append(ItemWidget(
+                    story,
+                    self.show_published_time,
+                    self.show_score,
+                    self.show_comments))
             item_ids.append(story.id)
 
         if self.already_build:
