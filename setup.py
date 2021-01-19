@@ -16,9 +16,9 @@ if sys.argv[-1] == 'publish':
     sys.exit()
 
 requires = [
-    'requests==2.10.0',
-    'beautifulsoup4==4.5.1',
-    'urwid==1.3.1']
+    'requests==2.25.1',
+    'beautifulsoup4==4.9.3',
+    'urwid==2.1.2']
 
 version = ''
 with open('pyhn/__init__.py', 'r') as fd:
