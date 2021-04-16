@@ -139,7 +139,7 @@ License
 License is `MIT`_. See `LICENSE`_.
 
 .. _AUR: https://aur.archlinux.org/packages/pyhn/
-.. _input: http://excess.org/urwid/docs/manual/userinput.html#keyboard-input
-.. _manual: http://excess.org/urwid/docs/manual/displayattributes.html#foreground-and-background-settings
+.. _input: http://urwid.org/manual/userinput.html#keyboard-input
+.. _manual: http://urwid.org/manual/displayattributes.html#foreground-and-background-settings
 .. _MIT: http://opensource.org/licenses/MIT
 .. _LICENSE: https://raw.github.com/socketubs/pyhn/master/LICENSE
