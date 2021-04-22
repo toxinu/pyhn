@@ -119,7 +119,7 @@ class Config(object):
         if not self.parser.has_option('colors', 'body'):
             self.parser.set('colors', 'body', 'default||standout')
         if not self.parser.has_option('colors', 'focus'):
-            self.parser.set('colors', 'focus', 'black||underline')
+            self.parser.set('colors', 'focus', 'yellow,bold||underline')
         if not self.parser.has_option('colors', 'footer'):
             self.parser.set('colors', 'footer', 'black|light gray')
         if not self.parser.has_option('colors', 'footer-error'):
