@@ -1,4 +1,4 @@
 beautifulsoup4==4.9.3
-requests==2.25.1
+requests==2.31.0
 urwid==2.1.2
 # wheel

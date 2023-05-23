@@ -16,7 +16,7 @@ if sys.argv[-1] == 'publish':
     sys.exit()
 
 requires = [
-    'requests==2.25.1',
+    'requests==2.31.0',
     'beautifulsoup4==4.9.3',
     'urwid==2.1.2']
 
