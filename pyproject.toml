@@ -1,0 +1,74 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyhn"
+dynamic = ["version"]
+description = "Hacker News in your terminal"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE", "NOTICE"]
+authors = [
+    { name = "toxinu", email = "jo@kikitama.com" },
+]
+keywords = ["python", "hackernews", "hn", "terminal", "commandline"]
+requires-python = ">=3.10"
+dependencies = [
+    "requests>=2.31",
+    "urwid>=2.6",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Natural Language :: English",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+
+[project.urls]
+Homepage = "https://github.com/toxinu/pyhn/"
+
+[project.scripts]
+pyhn = "pyhn.cli:main"
+
+[tool.setuptools]
+packages = ["pyhn"]
+
+[tool.setuptools.dynamic]
+version = { attr = "pyhn.__version__" }
+
+[tool.ruff]
+# target-version is inferred from project.requires-python (>=3.10).
+line-length = 100
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "I",   # isort
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.10"
+files = ["pyhn"]
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+
+[[tool.mypy.overrides]]
+# urwid ships strict stubs (literal aligns, invariant widget lists, focus
+# typed as bare Widget). pyhn never opted into them; treat urwid as untyped
+# so mypy checks pyhn's own annotations without urwid-stub noise.
+module = ["urwid"]
+follow_imports = "skip"
+follow_imports_for_stubs = true
