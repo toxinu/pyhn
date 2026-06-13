@@ -1,4 +1,5 @@
-# -*- coding: utf-8 -*-
+from __future__ import annotations
+
 import urwid
 
 
@@ -12,9 +13,15 @@ class Popup(urwid.WidgetWrap):
                 or None if nothing has been selected.
     """
 
-    selected = None
+    selected: str | None = None
 
-    def __init__(self, menu_list, attr, pos, body):
+    def __init__(
+        self,
+        menu_list: list[urwid.AttrMap],
+        attr: tuple[str, str],
+        pos: tuple[int, int],
+        body: urwid.Widget,
+    ) -> None:
         """
         menu_list -- a list of strings with the menu entries
         attr -- a tuple (background, active_item) of attributes
@@ -32,13 +39,13 @@ class Popup(urwid.WidgetWrap):
                 width = len(entry.original_widget.text)
 
         # Create the ListBox widget and put it on top of body:
-        self._listbox = urwid.AttrWrap(urwid.ListBox(content), attr[0])
+        self._listbox = urwid.AttrMap(urwid.ListBox(content), attr[0])
         overlay = urwid.Overlay(self._listbox, body, 'center',
                                 width + 2, 'middle', height)
 
         urwid.WidgetWrap.__init__(self, overlay)
 
-    def keypress(self, size, key):
+    def keypress(self, size: tuple[int, int], key: str) -> str | None:
         """
         <RETURN> key selects an item, other keys will be passed to
         the ListBox widget.
@@ -48,5 +55,5 @@ class Popup(urwid.WidgetWrap):
             (widget, foo) = self._listbox.get_focus()
             (text, foo) = widget.get_text()
             self.selected = text[1:]  # Get rid of the leading space...
-        else:
-            return self._listbox.keypress(size, key)
+            return None
+        return self._listbox.keypress(size, key)

@@ -1,37 +1,31 @@
-# -*- coding: utf-8 -*-
+from __future__ import annotations
+
 import os
+from configparser import ConfigParser
 
-try:
-    from configparser import SafeConfigParser
-except ImportError:
-    from ConfigParser import SafeConfigParser
-
-
-TRUE_WORDS = ['true', 'True', 'yes', '1']
-FALSE_WORDS = ['false', 'False', 'no', 0]
+TRUE_WORDS: list[str] = ['true', 'True', 'yes', '1']
+FALSE_WORDS: list[str | int] = ['false', 'False', 'no', 0]
 
 
-class Config(object):
-    def __init__(self, config_dir=None, config_file=None):
-        self.config_dir = config_dir
-        self.config_file = config_file
-
-        if config_dir is None:
-            self.config_dir = os.path.join(
-                os.environ.get('HOME', './'),
-                '.pyhn')
-        if config_file is None:
-            self.config_file = "config"
+class Config:
+    def __init__(
+        self,
+        config_dir: str | None = None,
+        config_file: str | None = None,
+    ) -> None:
+        self.config_dir: str = config_dir or os.path.join(
+            os.environ.get('HOME', './'), '.pyhn')
+        self.config_file: str = config_file or "config"
 
         if not os.path.exists(self.config_dir):
             os.makedirs(self.config_dir)
 
         self.config_path = os.path.join(self.config_dir, self.config_file)
 
-        self.parser = SafeConfigParser()
+        self.parser = ConfigParser()
         self.read()
 
-    def read(self):
+    def read(self) -> None:
         self.parser.read(self.config_path)
 
         # Keybindings
@@ -47,9 +41,9 @@ class Config(object):
         if not self.parser.has_option('keybindings', 'last_story'):
             self.parser.set('keybindings', 'last_story', 'G')
         if not self.parser.has_option('keybindings', 'up'):
-            self.parser.set('keybindings', 'up', 'j')
+            self.parser.set('keybindings', 'up', 'k')
         if not self.parser.has_option('keybindings', 'down'):
-            self.parser.set('keybindings', 'down', 'k')
+            self.parser.set('keybindings', 'down', 'j')
         if not self.parser.has_option('keybindings', 'refresh'):
             self.parser.set('keybindings', 'refresh', 'r')
 
@@ -60,7 +54,11 @@ class Config(object):
         if not self.parser.has_option('keybindings', 'show_story_link'):
             self.parser.set('keybindings', 'show_story_link', 's')
         if not self.parser.has_option('keybindings', 'open_story_link'):
-            self.parser.set('keybindings', 'open_story_link', 'S,enter')
+            self.parser.set('keybindings', 'open_story_link', 'S')
+        if not self.parser.has_option('keybindings', 'comments'):
+            self.parser.set('keybindings', 'comments', 'enter')
+        if not self.parser.has_option('keybindings', 'back'):
+            self.parser.set('keybindings', 'back', 'esc')
         if not self.parser.has_option('keybindings', 'show_submitter_link'):
             self.parser.set('keybindings', 'show_submitter_link', 'u')
         if not self.parser.has_option('keybindings', 'open_submitter_link'):
@@ -97,7 +95,7 @@ class Config(object):
             self.parser.add_section('settings')
 
         if not self.parser.has_option('settings', 'extra_page'):
-            self.parser.set('settings', 'extra_page', '2')
+            self.parser.set('settings', 'extra_page', '3')
 
         if not self.parser.has_option('settings', 'cache'):
             self.parser.set(
@@ -111,6 +109,21 @@ class Config(object):
 
         if not self.parser.has_option('settings', 'refresh_interval'):
             self.parser.set('settings', 'refresh_interval', '5')
+
+        if not self.parser.has_option('settings', 'comments_limit'):
+            # Roughly a screenful: keeps the initial comment load fast (fewer
+            # API round-trips). BFS fills top-level comments first, then a few
+            # children. Raise for deeper threads at the cost of load time.
+            self.parser.set('settings', 'comments_limit', '50')
+
+        if not self.parser.has_option('settings', 'log_path'):
+            self.parser.set(
+                'settings',
+                'log_path',
+                os.path.join(
+                    os.environ.get('HOME', './'), '.pyhn', 'pyhn.log'))
+        if not self.parser.has_option('settings', 'log_level'):
+            self.parser.set('settings', 'log_level', 'WARNING')
 
         # Colors
         if not self.parser.has_section('colors'):
@@ -131,12 +144,21 @@ class Config(object):
             self.parser.set('colors', 'title', 'dark red,bold|light gray')
         if not self.parser.has_option('colors', 'help'):
             self.parser.set('colors', 'help', 'black|dark cyan|standout')
+        if not self.parser.has_option('colors', 'skeleton'):
+            self.parser.set('colors', 'skeleton', 'dark gray|default')
+        if not self.parser.has_option('colors', 'domain'):
+            self.parser.set('colors', 'domain', 'dark blue|default')
+        if not self.parser.has_option('colors', 'comment-meta'):
+            self.parser.set('colors', 'comment-meta', 'dark green|default')
+        if not self.parser.has_option('colors', 'comment-bar'):
+            self.parser.set('colors', 'comment-bar', 'light cyan|default')
 
         if not os.path.exists(self.config_path):
-            self.parser.write(open(self.config_path, 'w'))
+            with open(self.config_path, 'w') as f:
+                self.parser.write(f)
 
-    def get_palette(self):
-        palette = []
+    def get_palette(self) -> list[tuple[str, str, str, str]]:
+        palette: list[tuple[str, str, str, str]] = []
         for item in self.parser.items('colors'):
             name = item[0]
             settings = item[1]
