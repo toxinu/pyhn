@@ -1,60 +1,52 @@
 """
-hn-api is a simple, ad-hoc Python API for Hacker News.
-======================================================
+Client for the official Hacker News API.
 
-hn-api is released under the Simplified BSD License:
+Hacker News publishes a versioned, public JSON API hosted on Firebase:
+https://github.com/HackerNews/API
 
-Copyright (c) 2010, Scott Jackson
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-   1. Redistributions of source code must retain the above copyright notice,
-      this list of conditions and the following disclaimer.
-
-   2. Redistributions in binary form must reproduce the above copyright notice,
-      this list of conditions and the following disclaimer in the
-      documentation and/or other materials provided with the distribution.
-
-THIS SOFTWARE IS PROVIDED BY SCOTT JACKSON ``AS IS'' AND ANY EXPRESS OR IMPLIED
-WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-IN NO EVENT SHALL SCOTT JACKSON OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
-INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
-ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-The views and conclusions contained in the software and documentation are
-those of the authors and should not be interpreted as representing official
-policies, either expressed or implied, of Scott Jackson.
-
-
+This module wraps it and exposes story/user objects to the rest of pyhn. The
+public surface (HackerNewsAPI.get_*_stories, the HackerNewsStory fields,
+HackerNewsUser) is kept stable so the cache and GUI layers are unaffected.
 """
-import re
-import sys
+from __future__ import annotations
+
+import html
+import time
+from collections.abc import Iterator
+from concurrent.futures import ThreadPoolExecutor
+from html.parser import HTMLParser
+from typing import Any
 
 import requests
-from bs4 import BeautifulSoup
 
-PY3 = False
-if sys.version_info.major == 3:
-    PY3 = True
+API_BASE = "https://hacker-news.firebaseio.com/v0"
+ITEM_BASE = "https://news.ycombinator.com/item?id="
+USER_BASE = "https://news.ycombinator.com/user?id="
 
-if PY3:
-    from urllib.parse import urljoin
-    from urllib.parse import urlparse
-else:
-    from urlparse import urljoin
-    from urlparse import urlparse
+# Stories per "page", matching the historical HN front-page size. extra_page
+# multiplies this (extra_page=2 -> 90 stories), preserving the old semantics.
+PAGE_SIZE = 30
+# Concurrency for per-item lookups (the API has no batch endpoint).
+MAX_WORKERS = 16
+# Per-request timeout (seconds) so a stalled connection can't hang forever.
+REQUEST_TIMEOUT = 10
 
 HEADERS = {
     'User-Agent': (
         "Pyhn (Hacker news command line client) - "
         "https://github.com/toxinu/pyhn")}
+
+# Maps a pyhn "which" value to the API's story-list endpoint. The API has no
+# "show newest" list, so show_newest aliases to showstories.
+LIST_ENDPOINTS = {
+    "top": "topstories",
+    "newest": "newstories",
+    "best": "beststories",
+    "ask": "askstories",
+    "show": "showstories",
+    "show_newest": "showstories",
+    "jobs": "jobstories",
+}
 
 
 class HNException(Exception):
@@ -67,388 +59,279 @@ class HNException(Exception):
     pass
 
 
+def _relative_time(epoch: int, now: float | None = None) -> str:
+    """Render a Unix timestamp as a relative string, e.g. '2 hours ago'."""
+    if now is None:
+        now = time.time()
+    delta = int(now - epoch)
+    if delta < 0:
+        delta = 0
+
+    for unit, seconds in (
+            ("day", 86400), ("hour", 3600), ("minute", 60), ("second", 1)):
+        if delta >= seconds:
+            value = delta // seconds
+            plural = "s" if value != 1 else ""
+            return f"{value} {unit}{plural} ago"
+    return "just now"
+
+
+class _TextExtractor(HTMLParser):
+    """Collects plain text from HN comment HTML."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.parts: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs: list) -> None:
+        if tag == "p":
+            self.parts.append("\n\n")
+        elif tag == "br":
+            self.parts.append("\n")
+        elif tag == "li":
+            self.parts.append("\n- ")
+
+    def handle_data(self, data: str) -> None:
+        self.parts.append(data)
+
+    def get_text(self) -> str:
+        return "".join(self.parts).strip()
+
+
+def _html_to_text(raw: str) -> str:
+    """Convert HN comment HTML to readable plain text."""
+    if not raw:
+        return ""
+    parser = _TextExtractor()
+    parser.feed(raw)
+    return parser.get_text()
+
+
 class HackerNewsAPI:
-    """
-    The class for slicing and dicing the HTML and turning
-    it into HackerNewsStory objects.
-    """
-    number_of_stories_on_front_page = 0
+    """Fetches stories and users from the official Hacker News API."""
 
-    def get_source(self, url):
-        """
-        Returns the HTML source code for a URL.
-        """
+    def fetch_json(self, url: str) -> Any:
+        """GET a URL and return the decoded JSON body."""
         try:
-            r = requests.get(url, headers=HEADERS)
-            if r:
-                return r.text
-        except Exception:
+            r = requests.get(url, headers=HEADERS, timeout=REQUEST_TIMEOUT)
+        except Exception as exc:
             raise HNException(
-                "Error getting source from " + url +
+                "Error getting data from " + url +
                 ". Your internet connection may have something "
-                "funny going on, or you could be behind a proxy.")
+                "funny going on, or you could be behind a proxy.") from exc
+        if not r:
+            raise HNException(
+                f"Empty or error response ({r.status_code}) from {url}")
+        return r.json()
 
-    def get_story_number(self, source):
+    def _story_ids(self, which: str) -> list[int]:
+        """Return the ordered story ids for a 'which' section."""
+        endpoint = LIST_ENDPOINTS.get(which)
+        if endpoint is None:
+            valid = ", ".join(sorted(LIST_ENDPOINTS))
+            raise ValueError(f"Bad value: one of {valid}")
+        ids = self.fetch_json(f"{API_BASE}/{endpoint}.json")
+        return ids or []
+
+    def _fetch_item(self, item_id: int) -> dict | None:
+        """Fetch a single item; None if it has no body."""
+        return self.fetch_json(f"{API_BASE}/item/{item_id}.json")
+
+    def _build_story(self, item: dict | None, rank: int) -> HackerNewsStory | None:
+        """Turn an API item into a HackerNewsStory, or None to skip it."""
+        if not item or item.get('deleted') or item.get('dead'):
+            return None
+
+        story = HackerNewsStory()
+        story.id = item.get('id')
+        story.number = rank
+        story.title = html.unescape(item.get('title') or "")
+        story.score = item.get('score')
+        story.comment_count = item.get('descendants')
+        story.published_time = _relative_time(item['time']) if item.get('time') else ""
+
+        story.comments_url = f"{ITEM_BASE}{story.id}"
+        # Jobs send url:"" and Ask/text posts omit it; fall back to the item page.
+        story.url = item.get('url') or story.comments_url
+        story.domain = story.url
+
+        story.submitter = item.get('by')
+        if story.submitter:
+            story.submitter_url = f"{USER_BASE}{story.submitter}"
+        else:
+            story.submitter_url = None
+        return story
+
+    def iter_stories(
+        self,
+        which: str,
+        extra_page: int = 1,
+        chunk_size: int = PAGE_SIZE,
+    ) -> Iterator[list[HackerNewsStory]]:
+        """Yield stories in chunks, fetching each chunk's items concurrently.
+
+        Lets callers render the first page before the whole batch arrives.
+        Ranks are assigned sequentially across chunks (filtered items skipped).
         """
-        Parses HTML and returns the number of a story.
+        count = PAGE_SIZE * (extra_page + 1)
+        ids = self._story_ids(which)[:count]
+        rank = 1
+        for start in range(0, len(ids), chunk_size):
+            batch = ids[start:start + chunk_size]
+            with ThreadPoolExecutor(max_workers=MAX_WORKERS) as pool:
+                items = list(pool.map(self._fetch_item, batch))
+            chunk = []
+            for item in items:
+                story = self._build_story(item, rank)
+                if story is not None:
+                    chunk.append(story)
+                    rank += 1
+            yield chunk
+
+    def _collect(self, which: str, extra_page: int) -> list[HackerNewsStory]:
+        """Fetch the first N ids for 'which' and build all stories."""
+        return [
+            story
+            for chunk in self.iter_stories(which, extra_page)
+            for story in chunk]
+
+    def get_top_stories(self, extra_page: int = 1) -> list[HackerNewsStory]:
+        return self._collect("top", extra_page)
+
+    def get_newest_stories(self, extra_page: int = 1) -> list[HackerNewsStory]:
+        return self._collect("newest", extra_page)
+
+    def get_best_stories(self, extra_page: int = 1) -> list[HackerNewsStory]:
+        return self._collect("best", extra_page)
+
+    def get_show_stories(self, extra_page: int = 1) -> list[HackerNewsStory]:
+        return self._collect("show", extra_page)
+
+    def get_show_newest_stories(self, extra_page: int = 1) -> list[HackerNewsStory]:
+        return self._collect("show_newest", extra_page)
+
+    def get_ask_stories(self, extra_page: int = 1) -> list[HackerNewsStory]:
+        return self._collect("ask", extra_page)
+
+    def get_jobs_stories(self, extra_page: int = 1) -> list[HackerNewsStory]:
+        return self._collect("jobs", extra_page)
+
+    def get_comments(
+        self, item_id: int, max_comments: int = 50,
+    ) -> list[HackerNewsComment]:
+        """Fetch a story's comment tree, flattened depth-first with depth tags.
+
+        Items are fetched breadth-first, one whole level at a time and fully
+        concurrent, so a large thread is a handful of parallel batches rather
+        than hundreds of serial round-trips. Display order is then a cheap
+        depth-first walk over the items already in memory.
         """
-        bs = BeautifulSoup(source, "html.parser")
-        span = bs.find('span', attrs={'class': 'rank'})
-        if span.string:
-            number = span.string.replace('.', '')
-            return int(number)
+        root = self._fetch_item(item_id)
+        if not root:
+            return []
 
-    def get_story_url(self, source):
-        """
-        Gets the URL of a story.
-        """
-        url_start = source.find('href="') + 6
-        url_end = source.find('">', url_start)
-        url = source[url_start:url_end]
-        # Check for "Ask HN" links.
-        if url[0:4] == "item":  # "Ask HN" links start with "item".
-            url = "https://news.ycombinator.com/" + url
+        items: dict[int, dict] = {}
+        frontier = list(root.get('kids', []))
+        with ThreadPoolExecutor(max_workers=MAX_WORKERS) as pool:
+            while frontier and len(items) < max_comments:
+                batch = frontier[:max_comments - len(items)]
+                next_frontier: list[int] = []
+                for cid, item in zip(
+                        batch, pool.map(self._fetch_item, batch), strict=False):
+                    if not item:
+                        continue
+                    items[cid] = item
+                    next_frontier.extend(item.get('kids', []))
+                frontier = next_frontier
 
-        # Change "&amp;" to "&"
-        url = url.replace("&amp;", "&")
+        out: list[HackerNewsComment] = []
 
-        # Remove 'rel="nofollow' from the end of links,
-        # since they were causing some bugs.
-        if url[len(url) - 13:] == "rel=\"nofollow":
-            url = url[:len(url) - 13]
+        def walk(kid_ids: list[int], depth: int) -> None:
+            for cid in kid_ids:
+                if len(out) >= max_comments:
+                    return
+                item = items.get(cid)
+                if not item:
+                    continue
+                deleted = bool(item.get('deleted') or item.get('dead'))
+                out.append(HackerNewsComment(
+                    by=item.get('by'),
+                    text="[deleted]" if deleted else _html_to_text(
+                        item.get('text', '')),
+                    published_time=(
+                        _relative_time(item['time']) if item.get('time') else ""),
+                    depth=depth,
+                    deleted=deleted))
+                walk(item.get('kids', []), depth + 1)
 
-        # Weird hack for URLs that end in '" '.
-        # Consider removing later if it causes any problems.
-        if url[len(url) - 2:] == "\" ":
-            url = url[:len(url) - 2]
-        return url
+        walk(root.get('kids', []), 0)
+        return out
 
-    def get_story_domain(self, source):
-        """
-        Gets the domain of a story.
-        """
-        bs = BeautifulSoup(source, "html.parser")
-        url = bs.find('a').get('href')
-        url_parsed = urlparse(url)
-        if url_parsed.netloc:
-            return url
-        return urljoin('https://news.ycombinator.com', url)
 
-    def get_story_title(self, source):
-        """
-        Gets the title of a story.
-        """
-        bs = BeautifulSoup(source, "html.parser")
-        title = bs.find('td', attrs={'class': 'title'}).text
-        title = title.strip()
-        return title
+class HackerNewsComment:
+    """A single comment in a story's thread."""
 
-    def get_story_score(self, source):
-        """
-        Gets the score of a story.
-        """
-        bs = BeautifulSoup(source, "html.parser")
-        tags = bs.find_all('span', {'class': 'score'})
-        if tags:
-            score = tags[0].text.split(u'\xa0')
-            if not score or not score[0].isdigit():
-                score = tags[0].text.split(' ')
-            if score and score[0].isdigit():
-                return int(score[0])
-
-    def get_submitter(self, source):
-        """
-        Gets the HN username of the person that submitted a story.
-        """
-        bs = BeautifulSoup(source, "html.parser")
-        tags = bs.find_all('a', {'class': 'hnuser'})
-        if tags:
-            return tags[0].text
-
-    def get_comment_count(self, source):
-        """
-        Gets the comment count of a story.
-        """
-        bs = BeautifulSoup(source, "html.parser")
-        comments = bs.find_all('a', text=re.compile('comment'))
-        if comments:
-            comments = comments[0].text
-            separator = u'\xc2\xa0'
-            if separator in comments:
-                comments = comments.split(separator)[0]
-            else:
-                comments = comments.split(u'\xa0')[0]
-            try:
-                return int(comments)
-            except ValueError:
-                return None
-
-        comments = bs.find_all('a', text=re.compile('discuss'))
-        if comments:
-            return 0
-
-    def get_published_time(self, source):
-        """
-        Gets the published time ago
-        """
-        p = re.compile(
-            r'\d{1,}\s(minutes|minute|hours|hour|day|days)\sago', flags=re.U)
-
-        if not PY3:
-            source = source.decode('utf-8')
-
-        results = p.search(source)
-        if results:
-            return results.group()
-
-    def get_hn_id(self, source):
-        """
-        Gets the Hacker News ID of a story.
-        """
-        bs = BeautifulSoup(source, "html.parser")
-        hn_id = bs.find_all('a', {'href': re.compile('item\?id=')})
-        if hn_id:
-            hn_id = hn_id[0].get('href')
-            if hn_id:
-                hn_id = hn_id.split('item?id=')[-1]
-                if hn_id.isdigit():
-                    return int(hn_id)
-
-    def get_comments_url(self, source):
-        """
-        Gets the comment URL of a story.
-        """
-        return "https://news.ycombinator.com/item?id=" + str(
-            self.get_hn_id(source))
-
-    def get_stories(self, source):
-        """
-        Looks at source, makes stories from it, returns the stories.
-        """
-        """ <td align=right valign=top class="title">31.</td> """
-        self.number_of_stories_on_front_page = source.count(
-            'span class="rank"')
-
-        # Create the empty stories.
-        news_stories = []
-        for i in range(0, self.number_of_stories_on_front_page):
-            story = HackerNewsStory()
-            news_stories.append(story)
-
-        soup = BeautifulSoup(source, "html.parser")
-        # Gives URLs, Domains and titles.
-        story_details = soup.findAll("td", {"class": "title"})
-        # Gives score, submitter, comment count and comment URL.
-        story_other_details = soup.findAll("td", {"class": "subtext"})
-        # Get story numbers.
-        story_numbers = []
-        for i in range(0, len(story_details) - 1, 2):
-            # Otherwise, story_details[i] is a BeautifulSoup-defined object.
-            story = str(story_details[i])
-            story_number = self.get_story_number(story)
-            story_numbers.append(story_number)
-
-        story_urls = []
-        story_domains = []
-        story_titles = []
-        story_scores = []
-        story_submitters = []
-        story_comment_counts = []
-        story_comment_urls = []
-        story_published_time = []
-        story_ids = []
-
-        # Every second cell contains a story.
-        for i in range(1, len(story_details), 2):
-            story = str(story_details[i])
-            story_urls.append(self.get_story_url(story))
-            story_domains.append(self.get_story_domain(story))
-            story_titles.append(self.get_story_title(story))
-
-        for s in story_other_details:
-            story = str(s)
-            story_scores.append(self.get_story_score(story))
-            story_submitters.append(self.get_submitter(story))
-            story_comment_counts.append(self.get_comment_count(story))
-            story_comment_urls.append(self.get_comments_url(story))
-            story_published_time.append(self.get_published_time(story))
-            story_ids.append(self.get_hn_id(story))
-
-        # Associate the values with our newsStories.
-        for i in range(0, self.number_of_stories_on_front_page):
-            news_stories[i].number = story_numbers[i]
-            news_stories[i].url = story_urls[i]
-            news_stories[i].domain = story_domains[i]
-            news_stories[i].title = story_titles[i]
-            news_stories[i].score = story_scores[i]
-            news_stories[i].submitter = story_submitters[i]
-            if news_stories[i].submitter:
-                news_stories[i].submitter_url = (
-                    "https://news.ycombinator.com/user?id={}".format(
-                        story_submitters[i]))
-            else:
-                news_stories[i].submitter_url = None
-            news_stories[i].comment_count = story_comment_counts[i]
-            news_stories[i].comments_url = story_comment_urls[i]
-            news_stories[i].published_time = story_published_time[i]
-            news_stories[i].id = story_ids[i]
-
-            if news_stories[i].id < 0:
-                news_stories[i].url.find('item?id=') + 8
-                news_stories[i].comments_url = ''
-                news_stories[i].submitter = None
-                news_stories[i].submitter_url = None
-
-        return news_stories
-
-    def get_more_link(self, source):
-        soup = BeautifulSoup(source, "html.parser")
-        more_a = soup.findAll("a", {"rel": "nofollow"}, text="More")
-        if more_a:
-            return urljoin('https://news.ycombinator.com/', more_a[0]['href'])
-        return None
-
-    # #### End of internal methods. #####
-
-    # The following methods could be turned into one method with
-    # an argument that switches which page to get stories from,
-    # but I thought it would be simplest if I kept the methods
-    # separate.
-
-    def get_jobs_stories(self, extra_page=1):
-        stories = []
-        source_latest = self.get_source("https://news.ycombinator.com/jobs")
-        stories += self.get_stories(source_latest)
-        for i in range(1, extra_page + 2):
-            get_more_link = self.get_more_link(source_latest)
-            if not get_more_link:
-                break
-            source_latest = self.get_source(get_more_link)
-            stories += self.get_stories(source_latest)
-
-        return stories
-
-    def get_ask_stories(self, extra_page=1):
-        stories = []
-        for i in range(1, extra_page + 2):
-            source = self.number_of_stories_on_front_page(
-                "https://news.ycombinator.com/ask?p=%s" % i)
-            stories += self.get_stories(source)
-        return stories
-
-    def get_show_newest_stories(self, extra_page=1):
-        stories = []
-        source_latest = self.get_source("https://news.ycombinator.com/shownew")
-        stories += self.get_stories(source_latest)
-        for i in range(1, extra_page + 2):
-            get_more_link = self.get_more_link(source_latest)
-            if not get_more_link:
-                break
-            source_latest = self.get_source(get_more_link)
-            stories += self.get_stories(source_latest)
-        return stories
-
-    def get_show_stories(self, extra_page=1):
-        stories = []
-        source_latest = self.get_source("https://news.ycombinator.com/show")
-        stories += self.get_stories(source_latest)
-        for i in range(1, extra_page + 2):
-            get_more_link = self.get_more_link(source_latest)
-            if not get_more_link:
-                break
-            source_latest = self.get_source(get_more_link)
-            stories += self.get_stories(source_latest)
-        return stories
-
-    def get_top_stories(self, extra_page=1):
-        """
-        Gets the top stories from Hacker News.
-        """
-        stories = []
-        for i in range(1, extra_page + 2):
-            source = self.get_source(
-                "https://news.ycombinator.com/news?p=%s" % i)
-            stories += self.get_stories(source)
-        return stories
-
-    def get_newest_stories(self, extra_page=1):
-        """
-        Gets the newest stories from Hacker News.
-        """
-        stories = []
-        source_latest = self.get_source("https://news.ycombinator.com/newest")
-        stories += self.get_stories(source_latest)
-        for i in range(1, extra_page + 2):
-            get_more_link = self.get_more_link(source_latest)
-            if not get_more_link:
-                break
-            source_latest = self.get_source(get_more_link)
-            stories += self.get_stories(source_latest)
-        return stories
-
-    def get_best_stories(self, extra_page=1):
-        """
-        Gets the "best" stories from Hacker News.
-        """
-        stories = []
-        for i in range(1, extra_page + 2):
-            source_latest = self.get_source(
-                "https://news.ycombinator.com/best?p=%s" % i)
-            stories += self.get_stories(source_latest)
-        return stories
-
-    def get_page_stories(self, pageId):
-        """
-        Gets the pageId stories from Hacker News.
-        """
-        source = self.get_source(
-            "https://news.ycombinator.com/x?fnid=%s" % pageId)
-        stories = self.get_stories(source)
-        return stories
+    def __init__(
+        self,
+        by: str | None,
+        text: str,
+        published_time: str,
+        depth: int,
+        deleted: bool = False,
+    ) -> None:
+        self.by = by
+        self.text = text
+        self.published_time = published_time
+        self.depth = depth
+        self.deleted = deleted
 
 
 class HackerNewsStory:
     """
     A class representing a story on Hacker News.
     """
-    id = 0         # The Hacker News ID of a story.
-    number = None  # What rank the story is on HN.
-    title = ""     # The title of the story.
-    domain = ""    # The website the story is from.
-    url = ""       # The URL of the story.
-    score = None   # Current score of the story.
-    submitter = ""        # The person that submitted the story.
-    comment_count = None  # How many comments the story has.
-    comments_url = ""     # The HN link for commenting (and upmodding).
-    published_time = ""   # The time sinc story was published
+    id: int | None = None            # The Hacker News ID of a story.
+    number: int | str | None = None  # What rank the story is on HN.
+    title: str = ""                  # The title of the story.
+    domain: str = ""                 # The website the story is from.
+    url: str = ""                    # The URL of the story.
+    score: int | str | None = None   # Current score of the story.
+    submitter: str | None = ""       # The person that submitted the story.
+    submitter_url: str | None = None  # The submitter's user page.
+    comment_count: int | None = None  # How many comments the story has.
+    comments_url: str | None = ""     # The HN link for commenting.
+    published_time: str | None = ""   # The time since story was published
 
-    def get_comments(self):
-        url = (
-            'http://hndroidapi.appspot.com/'
-            'nestedcomments/format/json/id/%s' % self.id)
-        try:
-            r = requests.get(url, headers=HEADERS)
-            self.comments = r.json()['items']
-            return self.comments
-        except Exception:
-            raise HNException(
-                "Error getting source from " + url +
-                ". Your internet connection may have something funny "
-                "going on, or you could be behind a proxy.")
+    # Fields persisted to / restored from the JSON cache.
+    _FIELDS = (
+        "id", "number", "title", "domain", "url", "score", "submitter",
+        "submitter_url", "comment_count", "comments_url", "published_time")
 
-    def print_details(self):
+    def to_dict(self) -> dict:
+        """Serialize to a plain dict for JSON storage."""
+        return {field: getattr(self, field) for field in self._FIELDS}
+
+    @classmethod
+    def from_dict(cls, data: dict) -> HackerNewsStory:
+        """Rebuild a story from a cached dict."""
+        story = cls()
+        for field in cls._FIELDS:
+            setattr(story, field, data.get(field))
+        return story
+
+    def print_details(self) -> None:
         """
         Prints details of the story.
         """
-        print(str(self.number) + ": " + self.title)
-        print("URL: %s" % self.url)
-        print("domain: %s" % self.domain)
-        print("score: " + str(self.score) + " points")
-        print("submitted by: " + self.submitter)
-        print("sinc %s" + self.published_time)
-        print("of comments: " + str(self.comment_count))
-        print("'discuss' URL: " + self.comments_url)
-        print("HN ID: " + str(self.id))
+        print(f"{self.number}: {self.title}")
+        print(f"URL: {self.url}")
+        print(f"domain: {self.domain}")
+        print(f"score: {self.score} points")
+        print(f"submitted by: {self.submitter}")
+        print(f"since {self.published_time}")
+        print(f"of comments: {self.comment_count}")
+        print(f"'discuss' URL: {self.comments_url}")
+        print(f"HN ID: {self.id}")
         print(" ")
 
 
@@ -457,32 +340,24 @@ class HackerNewsUser:
     A class representing a user on Hacker News.
     """
     # Default value. I don't think anyone really has -10000 karma.
-    karma = -10000
-    name = ""  # The user's HN username.
-    user_page_url = ""  # The URL of the user's 'user' page.
-    threads_page_url = ""  # The URL of the user's 'threads' page.
+    karma: int = -10000
+    name: str = ""  # The user's HN username.
+    user_page_url: str = ""  # The URL of the user's 'user' page.
+    threads_page_url: str = ""  # The URL of the user's 'threads' page.
 
-    def __init__(self, username):
+    def __init__(self, username: str) -> None:
         """
         Constructor for the user class.
         """
         self.name = username
-        self.user_page_url = (
-            "https://news.ycombinator.com/user?id=" + self.name)
+        self.user_page_url = USER_BASE + self.name
         self.threads_page_url = (
-            "https://news.ycombinator.com/threads?id=%s" % self.name)
+            f"https://news.ycombinator.com/threads?id={self.name}")
         self.refresh_karma()
 
-    def refresh_karma(self):
-        """
-        Gets the karma count of a user from the source of their 'user' page.
-        """
-        hn = HackerNewsAPI()
-        source = hn.get_source(self.user_page_url)
-        karma_start = source.find('<td valign=top>karma:</td><td>') + 30
-        karma_end = source.find('</td>', karma_start)
-        karma = source[karma_start:karma_end]
-        if karma is not '':
-            self.karma = int(karma)
-        else:
+    def refresh_karma(self) -> None:
+        """Fetch the user's karma from the API."""
+        data = HackerNewsAPI().fetch_json(f"{API_BASE}/user/{self.name}.json")
+        if not data or 'karma' not in data:
             raise HNException("Error getting karma for user " + self.name)
+        self.karma = int(data['karma'])

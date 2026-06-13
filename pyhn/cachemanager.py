@@ -1,83 +1,89 @@
-# -*- coding: utf-8 -*-
-import os
-import pickle
+from __future__ import annotations
+
 import datetime
+import json
+import os
+from collections.abc import Iterator
 
+from pyhn import hnapi
 from pyhn.config import Config
-from pyhn.hnapi import HackerNewsAPI
+from pyhn.hnapi import HackerNewsAPI, HackerNewsStory
 
 
-class CacheManager(object):
-    def __init__(self, cache_path=None):
-        self.cache_path = cache_path
+class CacheManager:
+    def __init__(self, cache_path: str | None = None) -> None:
+        self.config = Config()
         if cache_path is None:
-            self.config = Config()
-            self.cache_path = self.config.parser.get('settings', 'cache')
+            cache_path = self.config.parser.get('settings', 'cache')
+        self.cache_path: str = cache_path
 
         self.cache_age = int(self.config.parser.get('settings', 'cache_age'))
         self.extra_page = int(self.config.parser.get('settings', 'extra_page'))
+        self.comments_limit = int(
+            self.config.parser.get('settings', 'comments_limit'))
         self.api = HackerNewsAPI()
+        # Note: construction does not fetch. Callers load lazily (the GUI
+        # streams the first section once its event loop is running).
 
+    def expected_count(self) -> int:
+        """Approximate number of stories a full load will produce.
+
+        Used by the GUI to size the skeleton placeholder list.
+        """
+        return hnapi.PAGE_SIZE * (self.extra_page + 1)
+
+    def _load(self) -> dict:
+        """Read the JSON cache, returning {} on missing or unreadable file.
+
+        An unreadable file includes a legacy pickle cache from older
+        versions; it is simply treated as empty and rebuilt on refresh.
+        """
         if not os.path.exists(self.cache_path):
-            self.refresh()
-
-    def is_outdated(self, which="top"):
-        if not os.path.exists(self.cache_path):
-            return True
-
+            return {}
         try:
-            cache = pickle.load(open(self.cache_path, 'rb'))
-        except:
-            cache = {}
-        if not cache.get(which, False):
+            with open(self.cache_path, encoding="utf-8") as f:
+                return json.load(f)
+        except (OSError, ValueError, UnicodeDecodeError):
+            return {}
+
+    def is_outdated(self, which: str = "top") -> bool:
+        cache = self._load()
+        entry = cache.get(which)
+        if not entry:
             return True
 
-        cache_age = datetime.datetime.today() - cache[which]['date']
-        if cache_age.seconds > self.cache_age * 60:
-            return True
-        else:
-            return False
+        cached_at = datetime.datetime.fromisoformat(entry['date'])
+        cache_age = datetime.datetime.today() - cached_at
+        return cache_age.total_seconds() > self.cache_age * 60
 
-    def refresh(self, which="top"):
-        if which == "top":
-            stories = self.api.get_top_stories(extra_page=self.extra_page)
-        elif which == "newest":
-            stories = self.api.get_newest_stories(extra_page=self.extra_page)
-        elif which == "best":
-            stories = self.api.get_best_stories(extra_page=self.extra_page)
-        elif which == "show":
-            stories = self.api.get_show_stories(extra_page=self.extra_page)
-        elif which == "show_newest":
-            stories = self.api.get_show_newest_stories(
-                extra_page=self.extra_page)
-        elif which == "ask":
-            stories = self.api.get_ask_stories(extra_page=self.extra_page)
-        elif which == "jobs":
-            stories = self.api.get_jobs_stories(extra_page=self.extra_page)
-        else:
-            raise Exception(
-                'Bad value: top, newest, ask, jobs,'
-                'show, shownewest and best stories')
+    def refresh_stream(
+        self, which: str = "top",
+    ) -> Iterator[list[HackerNewsStory]]:
+        """Fetch a section in chunks, yielding each as it arrives.
 
-        cache = {}
-        if os.path.exists(self.cache_path):
-            try:
-                cache = pickle.load(open(self.cache_path, 'rb'))
-            except:
-                pass
+        Accumulates all chunks and writes the full section to the JSON cache
+        once the stream is exhausted, so the on-disk cache stays a complete
+        snapshot.
+        """
+        collected: list[HackerNewsStory] = []
+        for chunk in self.api.iter_stories(which, extra_page=self.extra_page):
+            collected.extend(chunk)
+            yield chunk
 
-        cache[which] = {'stories': stories, 'date': datetime.datetime.today()}
-        pickle.dump(cache, open(self.cache_path, 'wb'))
+        cache = self._load()
+        cache[which] = {
+            'stories': [story.to_dict() for story in collected],
+            'date': datetime.datetime.today().isoformat()}
+        with open(self.cache_path, "w", encoding="utf-8") as f:
+            json.dump(cache, f)
 
-    def get_stories(self, which="top"):
-        cache = []
-        if os.path.exists(self.cache_path):
-            try:
-                cache = pickle.load(open(self.cache_path, 'rb'))
-            except:
-                cache = {}
+    def refresh(self, which: str = "top") -> None:
+        """Fully refresh a section's cache (drains refresh_stream)."""
+        for _ in self.refresh_stream(which):
+            pass
 
-        if not cache.get(which, False):
+    def get_stories(self, which: str = "top") -> list[HackerNewsStory]:
+        entry = self._load().get(which)
+        if not entry:
             return []
-        else:
-            return cache[which]['stories']
+        return [HackerNewsStory.from_dict(d) for d in entry['stories']]
