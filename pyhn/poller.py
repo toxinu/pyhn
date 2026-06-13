@@ -1,23 +1,32 @@
-# -*- coding: utf-8 -*-
-from time import sleep
-from threading import Thread
+from __future__ import annotations
+
+from threading import Event, Thread
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pyhn.gui import HNGui
 
 
 class Poller(Thread):
-    def __init__(self, gui, delay=5):
+    """Periodically refreshes the current section.
+
+    Uses an Event so the wait is interruptible — stopping is instant instead of
+    polling a counter every 100ms.
+    """
+
+    def __init__(self, gui: HNGui, delay: int = 5) -> None:
         if delay < 1:
             delay = 1
-
         self.gui = gui
         self.delay = delay
-        self.is_running = True
-        self.counter = 0
-        super(Poller, self).__init__()
+        self._stop_event = Event()
+        super().__init__(daemon=True)
 
-    def run(self):
-        while self.is_running:
-            sleep(0.1)
-            self.counter += 0.1
-            if self.counter >= self.delay * 60:
-                self.gui.async_refresher(force=True)
-                self.counter = 0
+    def stop(self) -> None:
+        self._stop_event.set()
+
+    def run(self) -> None:
+        interval = self.delay * 60
+        # wait() returns True if stopped, False on timeout -> time to refresh.
+        while not self._stop_event.wait(interval):
+            self.gui.refresh_current()
