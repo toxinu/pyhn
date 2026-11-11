@@ -52,7 +52,10 @@ class CacheManager:
         if not entry:
             return True
 
-        cached_at = datetime.datetime.fromisoformat(entry['date'])
+        try:
+            cached_at = datetime.datetime.fromisoformat(entry.get('date') or "")
+        except (TypeError, ValueError):
+            return True
         cache_age = datetime.datetime.today() - cached_at
         return cache_age.total_seconds() > self.cache_age * 60
 
@@ -86,4 +89,4 @@ class CacheManager:
         entry = self._load().get(which)
         if not entry:
             return []
-        return [HackerNewsStory.from_dict(d) for d in entry['stories']]
+        return [HackerNewsStory.from_dict(d) for d in entry.get('stories') or []]
