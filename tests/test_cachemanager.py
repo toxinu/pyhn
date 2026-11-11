@@ -126,3 +126,31 @@ def test_legacy_or_corrupt_cache_treated_as_empty(monkeypatch):
         f.write(b"\x80\x04\x95not-json-pickle-bytes")
     assert manager.get_stories("top") == []
     assert manager.is_outdated("top") is True
+
+
+def _write_raw_cache(manager, payload):
+    with open(manager.cache_path, "w", encoding="utf-8") as f:
+        json.dump(payload, f)
+
+
+def test_partial_cache_entry_missing_date_is_outdated(monkeypatch):
+    _patch_iter(monkeypatch, [_fake_stories()])
+    manager = CacheManager()
+    _write_raw_cache(manager, {"top": {"stories": []}})
+    assert manager.is_outdated("top") is True
+
+
+def test_partial_cache_entry_bad_date_is_outdated(monkeypatch):
+    _patch_iter(monkeypatch, [_fake_stories()])
+    manager = CacheManager()
+    _write_raw_cache(manager, {"top": {"stories": [], "date": "not-a-date"}})
+    assert manager.is_outdated("top") is True
+
+
+def test_partial_cache_entry_missing_stories_is_empty(monkeypatch):
+    _patch_iter(monkeypatch, [_fake_stories()])
+    manager = CacheManager()
+    _write_raw_cache(
+        manager, {"top": {"date": datetime.datetime.today().isoformat()}})
+    assert manager.get_stories("top") == []
+    assert manager.is_outdated("top") is False
